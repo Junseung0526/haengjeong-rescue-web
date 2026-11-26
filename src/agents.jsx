@@ -139,7 +139,7 @@ export function Intro({ user, onDone }) {
     const b = setTimeout(onDone, 3600)
     return () => { clearTimeout(a); clearTimeout(b) }
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
-  const skip = () => { setOut(true); setTimeout(onDone, 400) }
+  const skip = () => { setOut(true); setTimeout(onDone, 550) }
   const title = '행정 구조대'
   return (
     <div className={`intro${out ? ' out' : ''}`} onClick={skip} role="status" aria-label="시스템 준비 중">

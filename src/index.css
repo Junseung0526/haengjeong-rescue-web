@@ -410,7 +410,10 @@ tbody tr { animation: rowIn .35s var(--ease) both; animation-delay: calc(min(var
 
 /* ---------- 인트로 ---------- */
 .intro { position: fixed; inset: 0; z-index: 90; background: #0b1a33; color: #fff; display: grid; place-items: center; cursor: pointer; overflow: hidden; transition: opacity .6s var(--ease), transform .6s var(--ease); }
-.intro.out { opacity: 0; transform: scale(1.08); pointer-events: none; }
+/* 나갈 때 글자를 먼저 지우고 배경을 걷어서, 뒤 화면 글자와 겹쳐 보이지 않게 한다 */
+.intro.out { opacity: 0; pointer-events: none; transition: opacity .35s .18s var(--ease); }
+.intro-center { transition: opacity .18s var(--ease), transform .18s var(--ease); }
+.intro.out .intro-center { opacity: 0; transform: scale(.97); }
 .intro-center { position: relative; display: grid; justify-items: center; gap: 14px; text-align: center; }
 .intro-ring { width: 104px; height: 104px; border-radius: 50%; display: grid; place-items: center; position: relative; animation: pop .6s var(--ease) both; }
 .intro-ring::before { content: ''; position: absolute; inset: 0; border-radius: 50%; border: 2px solid rgba(255, 255, 255, .12); border-top-color: #4c8bff; animation: spin 1.4s linear infinite; }
