@@ -81,6 +81,16 @@ const FEATS = [
   [ClipboardCheck, '마감 현황과 독촉, 제출 양식 출력까지 한 곳에서'],
 ]
 
+// 모든 화면 맨 아래 저작권·이용 안내
+function Footer() {
+  return (
+    <footer className="foot">
+      <span>© {new Date().getFullYear()} 행정 구조대. All rights reserved.</span>
+      <span>내부 업무용 시스템 · 개인정보 무단 열람·유출 금지</span>
+    </footer>
+  )
+}
+
 function Login({ onLogin }) {
   const [v, setV] = useState({ username: '', password: '' })
   const [show, setShow] = useState(false)
@@ -135,6 +145,7 @@ function Login({ onLogin }) {
           </div>
           <p className="muted" style={{ fontSize: 13, marginTop: 24 }}>계정이 없거나 잠겼다면 시스템 관리자에게 문의하세요.</p>
         </form>
+        <Footer />
       </div>
     </div>
   )
@@ -335,6 +346,7 @@ function Shell({ user, logout, setUser }) {
           </Routes>
           </PageBoundary>
         </main>
+        <Footer />
       </div>
       {tour && <Tour key={tour} path={tour} onDone={() => setTour(null)} />}
       {intro && <Intro user={user} onDone={() => { sessionStorage.setItem('intro', '1'); setIntro(false) }} />}
