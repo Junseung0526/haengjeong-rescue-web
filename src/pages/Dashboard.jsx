@@ -3,7 +3,7 @@ import { AGENTS } from '../agents'
 import ClosePipeline from './ClosePipeline'
 import { Link } from 'react-router-dom'
 import { api } from '../api'
-import { AlertOctagon, AlertTriangle, ArrowRight, CheckCircle2, CircleCheck, Info, Sparkles, Inbox, Landmark, ListTodo, UserCheck, Users } from 'lucide-react'
+import { AlertOctagon, AlertTriangle, ArrowRight, CheckCircle2, CircleCheck, Check, FileSearch, Info, Sparkles, Inbox, Landmark, ListTodo, UserCheck, Users } from 'lucide-react'
 import { Badge, Bar, Card, Live, useInterval, ErrorBox, PageHead, REASON, RowActions, Seg, Stat, Table, WORK_KIND, date, num, today, useApi, useApp, useModal, won, useUrlState } from '../ui'
 
 // 업무월이 이번 달이면 오늘, 지난 달이면 그 달 말일 기준
@@ -14,9 +14,14 @@ export const asOf = (month) => {
   return new Date(y, m, 0).toLocaleDateString('sv-SE')
 }
 
-// 새로고침이 끝날 때마다 세 에이전트가 무엇을 다시 확인했는지 한 줄씩 남긴다. 이전 값과 다르면 '변동' 표시.
+// 새로고침이 끝날 때마다 세 에이전트가 무엇을 다시 확인했는지 한 줄씩 남긴다.
+// 이전 값과 달라진 줄은 '확인 필요'로 담당자에게 넘기고, 담당자가 확인하면 누가 언제 봤는지 남긴다.
+const LOG_TO = { 0: '/validation', 1: '/changes?field=bank_account&confirmed=false', 2: '/submissions' }
 function AgentLog({ snap }) {
+  const { user } = useApp()
   const [log, setLog] = useState([])
+  const ack = (id) => setLog((l) => l.map((x) => (x.id === id ? { ...x, ack: `${user?.name || '담당자'} ${new Date().toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' })}` } : x)))
+  const open = log.filter((x) => x.chg && !x.ack).length
   const prev = useRef(null)
   useEffect(() => {
     const p = prev.current
@@ -36,13 +41,17 @@ function AgentLog({ snap }) {
   return (
     <section className="card agent-log">
       <div className="card-head">
-        <h2>에이전트 활동<span className="count">{log.length}</span></h2>
+        <h2>에이전트 활동<span className="count">{log.length}</span>{open > 0 && <span className="need">확인 필요 {open}</span>}</h2>
         <span className="live" style={{ border: 0, padding: 0 }}><span className="live-dot" />감시 중</span>
       </div>
       <ol aria-live="polite">
         {log.map((x, k) => (
           <li key={x.id} className={k < 3 ? 'fresh' : ''} style={{ '--agent': AGENTS[x.a].color, animationDelay: `${(k % 3) * 0.12}s` }}>
-            <i /><span><b>{AGENTS[x.a].name.replace(' 에이전트', '')}</b>{x.text}{x.chg && <span className="chg">변동</span>}</span><time>{x.time}</time>
+            <i /><span><b>{AGENTS[x.a].name.replace(' 에이전트', '')}</b>{x.text}
+              {x.chg && (x.ack
+                ? <span className="stamp"><Check size={11} />확인 · {x.ack}</span>
+                : <span className="log-act"><span className="chg">변동 · 확인 필요</span><Link to={LOG_TO[x.a]}>보기</Link><button type="button" onClick={() => ack(x.id)}>확인</button></span>)}
+            </span><time>{x.time}</time>
           </li>
         ))}
         {!log.length && <li style={{ '--agent': '#adb5bd' }}><i /><span className="muted">첫 확인을 준비하고 있습니다…</span><time /></li>}
@@ -51,25 +60,40 @@ function AgentLog({ snap }) {
   )
 }
 
+const hhmm = (t) => new Date(t).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' })
+// 담당자 확인 도장: 같은 문장(같은 수치)일 때만 유지된다. 수치가 바뀌면 다시 확인해야 한다.
+const OK_KEY = 'brief-ok'
+const okLoad = () => JSON.parse(localStorage.getItem(OK_KEY) || '{}')
+
 // 현황 수치에서 지금 챙길 일을 문장으로 뽑아 한 글자씩 타이핑해 보여준다.
-// 규칙 기반 요약이다 (언어 모델 호출 없음).
-function Briefing({ lines }) {
+// 규칙 기반 요약이다 (언어 모델 호출 없음). 문장마다 출처·판단 규칙·사용한 수치를 열어 볼 수 있다.
+function Briefing({ lines, at, month }) {
+  const { user } = useApp()
   const text = lines.map((l) => l.text).join('\n')
   const total = lines.reduce((n, l) => n + l.text.length, 0)
   const [n, setN] = useState(0)
+  const [open, setOpen] = useState(null)
+  const [ok, setOk] = useState(okLoad)
   useEffect(() => {
     if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return setN(total)
     setN(0)
     const t = setInterval(() => setN((x) => { if (x >= total) { clearInterval(t); return x } return x + 2 }), 18)
     return () => clearInterval(t)
   }, [text]) // eslint-disable-line react-hooks/exhaustive-deps
+  const confirm = (l) => {
+    const next = { ...ok, [`${month}|${l.key}`]: { text: l.text, by: user?.name || '담당자', at: Date.now() } }
+    localStorage.setItem(OK_KEY, JSON.stringify(next))
+    setOk(next)
+  }
   const ICON = { red: [AlertOctagon, 'var(--danger)'], yellow: [AlertTriangle, 'var(--warning)'], green: [CircleCheck, 'var(--success)'], blue: [Info, 'var(--primary)'] }
+  const done = n >= total
+  const checked = lines.filter((l) => ok[`${month}|${l.key}`]?.text === l.text).length
   let used = 0
   return (
     <section className="card ai-card">
       <div className="card-head">
         <h2><Sparkles size={17} /><span className="ai-title">오늘의 브리핑</span></h2>
-        <span className="muted" style={{ fontSize: 12.5 }}>현황 수치로 자동 생성</span>
+        <span className="ai-badge" title="현황 수치를 규칙에 따라 요약했습니다. 언어 모델을 쓰지 않습니다.">자동 요약 · {hhmm(at)} 기준</span>
       </div>
       <div className="card-body ai-lines">
         {lines.map((l, i) => {
@@ -79,14 +103,37 @@ function Briefing({ lines }) {
           if (!shown && i) return null
           const [I, c] = ICON[l.tone]
           const typing = shown < l.text.length
+          const stamp = ok[`${month}|${l.key}`]
+          const valid = stamp?.text === l.text
+          const isOpen = open === l.key
           return (
-            <div key={i} className="ai-line">
+            <div key={l.key} className={`ai-line${valid ? ' checked' : ''}`}>
               <I size={17} color={c} />
-              <span>{l.text.slice(0, shown)}{typing && <span className="caret" />}{!typing && l.to && <> <Link to={l.to}>{l.cta} →</Link></>}</span>
+              <div className="ai-body">
+                <span>{l.text.slice(0, shown)}{typing && <span className="caret" />}{!typing && l.to && <> <Link to={l.to}>{l.cta} →</Link></>}</span>
+                {!typing && (
+                  <div className="ai-meta">
+                    <button type="button" className={`cite${isOpen ? ' on' : ''}`} aria-expanded={isOpen} onClick={() => setOpen(isOpen ? null : l.key)}>
+                      <FileSearch size={12} />{l.src}<span className="sep" />근거 {l.facts.length}
+                    </button>
+                    {valid
+                      ? <span className="stamp" title={`${stamp.by} · ${new Date(stamp.at).toLocaleString('ko-KR')}`}><Check size={12} />확인 · {stamp.by} {hhmm(stamp.at)}</span>
+                      : <button type="button" className="ok-btn" onClick={() => confirm(l)}>{stamp ? '수치 바뀜 · 다시 확인' : '확인 표시'}</button>}
+                  </div>
+                )}
+                {isOpen && (
+                  <div className="ai-why">
+                    <dl>{l.facts.map(([k, v]) => <div key={k}><dt>{k}</dt><dd>{v}</dd></div>)}</dl>
+                    <p><b>판단 규칙</b>{l.why}</p>
+                    <p className="muted">출처: {l.src} 화면 · {hhmm(at)}에 불러온 수치</p>
+                  </div>
+                )}
+              </div>
             </div>
           )
         })}
       </div>
+      {done && <div className="ai-foot"><span>담당자 확인 {checked} / {lines.length}</span>자동 요약은 근거 수치로 만든 결과입니다. 처리 전 원천 화면에서 확인하세요.</div>}
     </section>
   )
 }
@@ -127,17 +174,27 @@ export default function Dashboard() {
   const rate = Number(d?.budget.execution_rate?.value) || 0
   const exited = Number(d?.personnel.exited.value) || 0
   const insReview = (Array.isArray(ins.data?.totals) ? ins.data.totals : []).filter((t) => t.reconcile_status === 'needs_review').reduce((n, t) => n + t.count, 0)
+  // 문장마다 출처 화면(src), 판단 규칙(why), 사용한 수치(facts)를 붙여 근거를 확인할 수 있게 한다
+  const issueN = issues.data?.length ?? 0
   const lines = !d?.budget || !Array.isArray(subs.data) || !Array.isArray(issues.data) ? [] : [
-    blocking > 0 && { tone: 'red', text: `반영을 막는 검증 오류가 ${blocking}건 남아 있습니다. 해결하기 전에는 인건비를 확정할 수 없습니다.`, to: '/validation', cta: '오류 보기' },
-    bank.data?.length > 0 && { tone: 'red', text: `계좌 변경을 확인하지 않은 참여자가 ${bank.data.length}명 있습니다. 확인 전까지 급여 지급이 차단됩니다.`, to: '/changes', cta: '확인하기' },
-    pay.data?.recalculation_required_count > 0 && { tone: 'red', text: `원천 자료가 바뀌어 다시 계산해야 하는 급여가 ${pay.data.recalculation_required_count}건 있습니다.`, to: '/payroll', cta: '재계산하기' },
-    insReview > 0 && { tone: 'yellow', text: `4대보험 고지 중 귀속을 확인해야 하는 건이 ${insReview}건 있습니다.`, to: '/insurance', cta: '확인하기' },
-    pending > 0 && { tone: 'yellow', text: `부서에서 올린 제출 ${pending}건이 승인을 기다리고 있습니다.`, to: '/submissions', cta: '검토하기' },
-    cnt('rejected') > 0 && { tone: 'yellow', text: `반려된 제출이 ${cnt('rejected')}건 있습니다. 부서의 재제출을 확인하세요.`, to: '/deadlines', cta: '독촉하기' },
-    exited > 0 && { tone: 'blue', text: `이달 퇴사자가 ${exited}명입니다. 중도 퇴사 정산 대상인지 확인하세요.`, to: '/settlements', cta: '정산 보기' },
-    d.budget.availability !== 'unlinked' && pct(d.budget.execution_rate) && { tone: rate > 90 ? 'yellow' : 'blue', text: `예산 집행률은 ${pct(d.budget.execution_rate)}%이고, 잔액은 ${won(d.budget.remaining_amount.value)}입니다.${rate > 90 ? ' 잔액이 얼마 남지 않았습니다.' : ''}` },
+    blocking > 0 && { key: 'blocking', tone: 'red', text: `반영을 막는 검증 오류가 ${blocking}건 남아 있습니다. 해결하기 전에는 인건비를 확정할 수 없습니다.`, to: '/validation', cta: '오류 보기',
+      src: '검증 오류', why: '미해결 검증 오류 중 ‘반영 차단’으로 표시된 건이 1건이라도 있으면 알립니다.', facts: [['미해결 오류', `${issueN}건`], ['반영 차단', `${blocking}건`]] },
+    bank.data?.length > 0 && { key: 'bank', tone: 'red', text: `계좌 변경을 확인하지 않은 참여자가 ${bank.data.length}명 있습니다. 확인 전까지 급여 지급이 차단됩니다.`, to: '/changes?field=bank_account&confirmed=false', cta: '확인하기',
+      src: '전월 대비 변경', why: '전월과 계좌가 달라졌는데 담당자가 아직 확인하지 않은 참여자를 셉니다. 확인 전에는 지급이 막힙니다.', facts: [['계좌 변경 미확인', `${bank.data.length}명`]] },
+    pay.data?.recalculation_required_count > 0 && { key: 'recalc', tone: 'red', text: `원천 자료가 바뀌어 다시 계산해야 하는 급여가 ${pay.data.recalculation_required_count}건 있습니다.`, to: '/payroll?tab=people', cta: '재계산하기',
+      src: '인건비 계산', why: '계산할 때 저장한 출결·계약·규칙 지문이 지금 원천과 다르면 재계산 대상으로 봅니다.', facts: [['계산 대상', `${num(pay.data.participant_count)}명`], ['재계산 필요', `${pay.data.recalculation_required_count}건`]] },
+    insReview > 0 && { key: 'ins', tone: 'yellow', text: `4대보험 고지 중 귀속을 확인해야 하는 건이 ${insReview}건 있습니다.`, to: '/insurance', cta: '확인하기',
+      src: '4대보험 귀속', why: '공단 고지 중 사업·참여월을 자동으로 정하지 못해 ‘확인 필요’로 남은 건을 셉니다.', facts: [['확인 필요', `${insReview}건`]] },
+    pending > 0 && { key: 'pending', tone: 'yellow', text: `부서에서 올린 제출 ${pending}건이 승인을 기다리고 있습니다.`, to: '/submissions', cta: '검토하기',
+      src: '부서 제출', why: '부서별 최신 제출 중 상태가 ‘제출’(승인 전)인 건을 셉니다.', facts: [['전체 제출', `${subs.data.length}건`], ['승인 대기', `${pending}건`]] },
+    cnt('rejected') > 0 && { key: 'rejected', tone: 'yellow', text: `반려된 제출이 ${cnt('rejected')}건 있습니다. 부서의 재제출을 확인하세요.`, to: '/deadlines', cta: '독촉하기',
+      src: '부서 제출', why: '부서별 최신 제출이 ‘반려’ 상태인 건을 셉니다.', facts: [['반려', `${cnt('rejected')}건`]] },
+    exited > 0 && { key: 'exited', tone: 'blue', text: `이달 퇴사자가 ${exited}명입니다. 중도 퇴사 정산 대상인지 확인하세요.`, to: '/settlements', cta: '정산 보기',
+      src: '현황 대시보드', why: '업무월 안에 참여가 끝난 사람을 셉니다. 중도 퇴사자는 연차·주휴 정산이 필요할 수 있습니다.', facts: [['이달 참여', `${num(d.personnel.month_participants.value)}명`], ['퇴사', `${exited}명`]] },
+    d.budget.availability !== 'unlinked' && pct(d.budget.execution_rate) && { key: 'budget', tone: rate > 90 ? 'yellow' : 'blue', text: `예산 집행률은 ${pct(d.budget.execution_rate)}%이고, 잔액은 ${won(d.budget.remaining_amount.value)}입니다.${rate > 90 ? ' 잔액이 얼마 남지 않았습니다.' : ''}`,
+      src: '예산 집행', why: '집행액 ÷ 배정액으로 집행률을 구합니다. 90%를 넘으면 주의로 표시합니다.', facts: [['배정액', won(d.budget.allocated_amount.value)], ['집행액', won(d.budget.executed_amount.value)], ['잔액', won(d.budget.remaining_amount.value)]] },
   ].filter(Boolean)
-  if (lines.length && !lines.some((l) => l.tone === 'red' || l.tone === 'yellow')) lines.unshift({ tone: 'green', text: '급하게 처리할 일이 없습니다. 제출·검증·계산·보험 모두 정상입니다.' })
+  if (lines.length && !lines.some((l) => l.tone === 'red' || l.tone === 'yellow')) lines.unshift({ key: 'ok', tone: 'green', text: '급하게 처리할 일이 없습니다. 제출·검증·계산·보험 모두 정상입니다.', src: '현황 대시보드', why: '반영 차단 오류·계좌 변경·재계산·보험 확인·승인 대기·반려가 모두 0건이면 이렇게 알립니다.', facts: [['미해결 오류', `${issueN}건`], ['승인 대기', `${pending}건`]] })
 
   const complete = (w) => open({
     title: `${WORK_KIND[w.kind]} 처리 확인`,
@@ -160,7 +217,7 @@ export default function Dashboard() {
       <ClosePipeline scope={scope} subs={subs.data} issues={issues.data} pay={pay.data} ins={ins.data} />
 
       <div className="grid grid-2">
-        {lines.length > 0 ? <Briefing lines={lines} /> : <div className="card"><div className="card-body"><div className="skel" style={{ width: '70%' }} /></div></div>}
+        {lines.length > 0 ? <Briefing lines={lines} at={at} month={scope.work_month} /> : <div className="card"><div className="card-body"><div className="skel" style={{ width: '70%' }} /></div></div>}
         <AgentLog snap={snap} />
       </div>
 
