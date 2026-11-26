@@ -134,10 +134,13 @@ export function Tour({ path, onDone }) {
 /* ---------- 로그인 직후 인트로 ---------- */
 export function Intro({ user, onDone }) {
   const [out, setOut] = useState(false)
+  const [ready, setReady] = useState(0) // 준비 완료된 에이전트 수
   useEffect(() => {
     const a = setTimeout(() => setOut(true), 3000)
     const b = setTimeout(onDone, 3600)
-    return () => { clearTimeout(a); clearTimeout(b) }
+    // '연결 중'과 '준비 완료'를 CSS 두 애니메이션으로 바꾸면 타이밍이 어긋날 때 겹쳐 보여서, 한 번에 하나만 그린다
+    const r = AGENTS.map((_, k) => setTimeout(() => setReady(k + 1), (1.6 + k * 0.35) * 1000))
+    return () => { clearTimeout(a); clearTimeout(b); r.forEach(clearTimeout) }
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
   const skip = () => { setOut(true); setTimeout(onDone, 550) }
   const title = '행정 구조대'
@@ -151,8 +154,7 @@ export function Intro({ user, onDone }) {
           {AGENTS.map((a, k) => (
             <div key={a.name} className="intro-agent" style={{ '--agent': a.color, animationDelay: `${1 + k * 0.35}s` }}>
               <i />{a.name}
-              <span className="intro-wait" style={{ animationDelay: `${1 + k * 0.35}s` }}>연결 중…</span>
-              <span className="intro-ok" style={{ animationDelay: `${1.6 + k * 0.35}s` }}>준비 완료 ✓</span>
+              {ready > k ? <span className="intro-ok">준비 완료 ✓</span> : <span className="intro-wait">연결 중…</span>}
             </div>
           ))}
         </div>
