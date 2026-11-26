@@ -2,7 +2,7 @@ import { createContext, useCallback, useContext, useEffect, useLayoutEffect, use
 import { createPortal } from 'react-dom'
 import { Link, useSearchParams } from 'react-router-dom'
 import { AlertTriangle, ArrowDown, ArrowUp, ArrowUpDown, CircleAlert, RefreshCw, FileUp, Inbox, Info, Loader2, Paperclip, Search, X } from 'lucide-react'
-import { api } from './api'
+import { api, getToken } from './api'
 
 export const AppCtx = createContext(null)
 export const useApp = () => useContext(AppCtx)
@@ -268,12 +268,15 @@ export const resetNames = () => { for (const k in nameCache) delete nameCache[k]
 export const resetDeptNames = resetNames
 function useCached(key, load) {
   const [v, setV] = useState(null)
+  const tok = getToken() || ''
   useEffect(() => {
+    // 로그인한 사람이 바뀌면 이전 사람 권한으로 불러온 목록을 버린다
+    if (nameCache.$tok !== tok) { resetNames(); nameCache.$tok = tok }
     nameCache[key] ||= load().catch(() => { delete nameCache[key]; return null })
     let live = true
     nameCache[key].then((x) => live && setV(x))
     return () => { live = false }
-  }, [key]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [key, tok]) // eslint-disable-line react-hooks/exhaustive-deps
   return v
 }
 // 부서 이름 Map. 사업 이름은 .projects에 함께 담는다
