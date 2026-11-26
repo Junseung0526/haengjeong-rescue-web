@@ -633,3 +633,18 @@ th { box-shadow: 0 1px 0 var(--border); }
 /* 큰 모니터: 내용 폭을 넓히고 가운데 정렬 */
 @media (min-width: 1800px) { :root { --content-max: 1640px; } }
 @media (min-width: 2300px) { :root { --content-max: 1880px; } .content, .main > .foot { padding-left: 48px; padding-right: 48px; } }
+
+/* 자리 비움 화면 */
+.privacy { position: fixed; inset: 0; z-index: 200; display: grid; place-items: center; color: #fff; background: rgba(9, 20, 40, .74); backdrop-filter: blur(28px) saturate(.7); -webkit-backdrop-filter: blur(28px) saturate(.7); }
+/* 가림막은 즉시 덮고, 가운데 글만 부드럽게 나타낸다 (애니메이션이 멈춰도 뒤 내용이 비치지 않게) */
+.privacy-col { animation: fadeUp .35s var(--ease) both; display: grid; justify-items: center; gap: 10px; padding: 24px; text-align: center; }
+.privacy-clock { font-size: clamp(64px, 8vw, 104px); font-weight: 700; letter-spacing: -0.04em; line-height: 1; font-variant-numeric: tabular-nums; }
+.privacy-date { color: #a9b8d6; font-size: 16px; margin: 0 0 28px; }
+.privacy-user { display: flex; align-items: center; gap: 12px; text-align: left; }
+.privacy-user .avatar { width: 44px; height: 44px; font-size: 17px; }
+.privacy-user b { display: block; font-size: 16px; }
+.privacy-user small { color: #a9b8d6; font-size: 13px; }
+.privacy-pill { display: inline-flex; align-items: center; gap: 6px; margin-top: 6px; padding: 6px 12px; border-radius: 999px; background: rgba(255, 255, 255, .08); border: 1px solid rgba(255, 255, 255, .14); color: #d5def0; font-size: 13px; }
+.privacy-back { margin-top: 22px; height: 46px; min-width: 220px; }
+.privacy-back:focus-visible { outline: 2px solid #9cc0ff; outline-offset: 3px; }
+.privacy-hint { color: #7f8ea8; font-size: 12.5px; margin: 4px 0 0; }
