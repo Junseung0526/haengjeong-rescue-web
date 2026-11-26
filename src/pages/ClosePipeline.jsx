@@ -115,8 +115,8 @@ export default function ClosePipeline({ scope, subs, issues, pay, ins }) {
           </p>
         </div>
         <div className="close-score" aria-label={`5단계 중 ${done}단계 완료`}>
-          <svg viewBox="0 0 36 36"><circle cx="18" cy="18" r="15.5" /><circle cx="18" cy="18" r="15.5" className="arc" style={{ strokeDasharray: `${(shown / steps.length) * 97.4} 97.4` }} /></svg>
-          <b><span>{shown}<small>/{steps.length}</small></span></b>
+          <b>{shown}<small>/ {steps.length} 단계 완료</small></b>
+          <div className="seg5">{steps.map((s, i) => <i key={s.key} className={i < at && !s.locked ? s.state : ''} />)}</div>
         </div>
       </div>
       <ol className="close-steps" key={run}>
