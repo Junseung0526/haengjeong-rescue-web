@@ -320,6 +320,14 @@ function Shell({ user, logout, setUser }) {
   const saveOpen = (n) => { localStorage.setItem('nav-open', JSON.stringify([...n])); setOpened(n) }
   const curGroup = cur?.[5]
   useEffect(() => { if (curGroup && !opened.has(curGroup)) saveOpen(new Set([...opened, curGroup])) }, [curGroup]) // eslint-disable-line react-hooks/exhaustive-deps
+  // 아이콘만 보일 때, 올린(또는 포커스한) 항목 이름을 오른쪽에 바로 띄운다
+  const [tip, setTip] = useState(null)
+  const onTip = (e) => {
+    const el = collapsed && e.target.closest?.('[data-tip]')
+    if (!el) return setTip(null)
+    const r = el.getBoundingClientRect()
+    setTip({ text: el.dataset.tip, sub: el.dataset.tipSub, x: r.right + 12, y: r.top + r.height / 2 })
+  }
   const flip = (g) => { const n = new Set(opened); if (n.has(g)) n.delete(g); else n.add(g); saveOpen(n) }
 
   // 탭 제목에 화면 이름과 안 읽은 알림 수를 보여준다
@@ -363,8 +371,8 @@ function Shell({ user, logout, setUser }) {
 
   return (
     <div className={`shell${collapsed ? ' collapsed' : ''}`}>
-      <aside className="sidebar">
-        <button type="button" className="brand" onClick={toggle} title={collapsed ? '메뉴 펼치기' : '메뉴 접기'} aria-expanded={!collapsed}><Logo /><span className="brand-text">행정 구조대<small>통합 행정 시스템</small></span></button>
+      <aside className="sidebar" onMouseOver={onTip} onFocus={onTip} onMouseLeave={() => setTip(null)} onBlur={() => setTip(null)} onScroll={() => setTip(null)}>
+        <button type="button" className="brand" onClick={toggle} data-tip="메뉴 펼치기" title={collapsed ? undefined : '메뉴 접기'} aria-expanded={!collapsed}><Logo /><span className="brand-text">행정 구조대<small>통합 행정 시스템</small></span></button>
         <nav className="nav" aria-label="주 메뉴">
           {groups.map(([g, list]) => {
             const open = collapsed || opened.has(g)
@@ -376,7 +384,7 @@ function Shell({ user, logout, setUser }) {
                 <div className="nav-items" inert={!open}>
                   <div>
                     {list.map(([to, label, code, , I]) => (
-                      <NavLink key={to} to={to} end={to === '/'} title={collapsed ? label : undefined}><I size={18} /><span>{label}</span><small>{code}</small></NavLink>
+                      <NavLink key={to} to={to} end={to === '/'} data-tip={label} data-tip-sub={code}><I size={18} /><span>{label}</span><small>{code}</small></NavLink>
                     ))}
                   </div>
                 </div>
@@ -385,13 +393,13 @@ function Shell({ user, logout, setUser }) {
           })}
         </nav>
         <div className="sidebar-foot">
-          <div className="user-card" title={collapsed ? `${user.name} · ${ROLE[user.role]}` : undefined}>
+          <div className="user-card" data-tip={user.name} data-tip-sub={ROLE[user.role]}>
             <span className="avatar">{user.name?.[0]}</span>
             <div className="user-text"><b>{user.name}</b><small>{ROLE[user.role]}</small></div>
           </div>
-          <button className="side-btn" onClick={() => setPw(true)} title="비밀번호 변경"><KeyRound size={17} /><span>비밀번호 변경</span></button>
-          <button className="side-btn" onClick={logout} title="로그아웃"><LogOut size={17} /><span>로그아웃</span></button>
-          <button className="side-btn" onClick={toggle} title={collapsed ? '메뉴 펼치기' : '메뉴 접기'}>{collapsed ? <PanelLeftOpen size={17} /> : <PanelLeftClose size={17} />}<span>메뉴 접기</span></button>
+          <button className="side-btn" onClick={() => setPw(true)} data-tip="비밀번호 변경"><KeyRound size={17} /><span>비밀번호 변경</span></button>
+          <button className="side-btn" onClick={logout} data-tip="로그아웃"><LogOut size={17} /><span>로그아웃</span></button>
+          <button className="side-btn" onClick={toggle} data-tip="메뉴 펼치기">{collapsed ? <PanelLeftOpen size={17} /> : <PanelLeftClose size={17} />}<span>메뉴 접기</span></button>
         </div>
       </aside>
       <div className="main">
@@ -419,6 +427,7 @@ function Shell({ user, logout, setUser }) {
       </div>
       {tour && <Tour key={tour} path={tour} onDone={() => setTour(null)} />}
       {intro && <Intro user={user} onDone={() => { sessionStorage.setItem('intro', '1'); setIntro(false) }} />}
+      {collapsed && tip && <div className="nav-tip" style={{ left: tip.x, top: tip.y }} aria-hidden="true">{tip.text}{tip.sub && <small>{tip.sub}</small>}</div>}
       {pal && <Palette items={items} onClose={() => setPal(false)} />}
       {lock && <Privacy user={user} lock={lock} onBack={() => setLock(null)} />}
       {pw && <ChangePassword onDone={() => setUser({ ...user, must_change_password: false })} onClose={() => setPw(false)} />}
