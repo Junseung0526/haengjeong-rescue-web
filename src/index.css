@@ -57,7 +57,18 @@ svg { flex-shrink: 0; }
 .brand-mark { width: 34px; height: 34px; border-radius: 10px; background: var(--primary); color: #fff; display: grid; place-items: center; font-size: 15px; font-weight: 800; flex-shrink: 0; box-shadow: inset 0 -2px 0 rgba(0, 0, 0, .15); }
 .brand small { display: block; font-size: 11.5px; font-weight: 500; color: #93a2bb; }
 .nav { padding: 4px 10px 16px; flex: 1; }
-.nav-group { font-size: 12px; font-weight: 600; color: #8796b0; padding: 16px 12px 6px 17px; letter-spacing: .02em; white-space: nowrap; }
+.nav-group { display: flex; align-items: center; width: 100%; margin-top: 6px; border: 0; background: none; cursor: pointer; text-align: left; font: inherit; font-size: 13px; font-weight: 600; color: #8796b0; padding: 10px 12px 10px 17px; border-radius: 8px; letter-spacing: .02em; white-space: nowrap; transition: color .15s, background .15s; }
+.nav-group:hover { color: #dbe3f1; background: rgba(255, 255, 255, .04); }
+.nav-group:disabled { cursor: default; background: none; }
+.nav-chev { margin-left: auto; transform: rotate(-90deg); transition: transform .28s var(--ease); opacity: .8; }
+.nav-sec.open .nav-chev { transform: none; }
+.nav-sec.open > .nav-group { color: #b7c2d4; }
+/* 펼침: 높이를 grid 0fr→1fr로 부드럽게. 왼쪽 선택 막대가 잘리지 않게 안쪽을 10px 넓힌다 */
+.nav-items { display: grid; grid-template-rows: 0fr; transition: grid-template-rows .3s var(--ease); }
+.nav-sec.open > .nav-items { grid-template-rows: 1fr; }
+.nav-items > div { min-height: 0; overflow: hidden; margin-left: -10px; padding-left: 10px; }
+.nav-items a { opacity: 0; transition: opacity .2s var(--ease), background .15s, color .15s; }
+.nav-sec.open .nav-items a { opacity: 1; }
 .nav a { display: flex; align-items: center; gap: 10px; padding: 8px 12px 8px 17px; border-radius: 8px; color: #b7c2d4; font-size: 14.5px; white-space: nowrap; transition: background .15s, color .15s; position: relative; }
 .nav a:hover { background: rgba(255, 255, 255, .06); color: #fff; }
 .nav a.active { background: rgba(76, 139, 255, .18); color: #fff; font-weight: 600; }
@@ -65,8 +76,8 @@ svg { flex-shrink: 0; }
 .nav a svg { opacity: .85; }
 .nav small { margin-left: auto; color: #8091ab; font-size: 11.5px; font-weight: 500; }
 /* 접기·펼치기: 아이콘은 펼친 상태부터 72px 폭 가운데(x=36)에 두어 움직이지 않고, 글자는 제자리에서 흐려지며 폭이 잘라낸다 */
-.nav-group, .nav a span, .nav small, .brand-text, .user-text, .side-btn span { transition: opacity .25s var(--ease) .1s; }
-.collapsed :is(.nav-group, .nav a span, .nav small, .brand-text, .user-text, .side-btn span) { opacity: 0; transition-delay: 0s; transition-duration: .15s; }
+.nav-group span, .nav-chev, .nav a span, .nav small, .brand-text, .user-text, .side-btn span { transition: opacity .25s var(--ease) .1s; }
+.collapsed :is(.nav-group span, .nav-chev, .nav a span, .nav small, .brand-text, .user-text, .side-btn span) { opacity: 0; transition-delay: 0s; transition-duration: .15s; }
 .collapsed .nav-group { position: relative; }
 .collapsed .nav-group::after { content: ''; position: absolute; left: 22px; bottom: 8px; width: 8px; height: 2px; border-radius: 2px; background: #33445f; }
 .sidebar-foot { border-top: 1px solid rgba(255, 255, 255, .08); padding: 12px; display: flex; flex-direction: column; gap: 6px; }

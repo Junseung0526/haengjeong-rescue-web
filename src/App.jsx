@@ -2,7 +2,7 @@ import { Component, useCallback, useEffect, useMemo, useRef, useState } from 're
 import { createPortal } from 'react-dom'
 import { BrowserRouter, Navigate, NavLink, Route, Routes, useLocation, useNavigate } from 'react-router-dom'
 import {
-  Bell, Building2, CircleHelp, CalendarCheck, CalendarClock, Calculator, CheckCircle2, ChevronRight, ClipboardCheck, Command, Eye, EyeOff,
+  Bell, Building2, CircleHelp, CalendarCheck, CalendarClock, Calculator, CheckCircle2, ChevronDown, ChevronRight, ClipboardCheck, Command, Eye, EyeOff,
   FileDown, FileSpreadsheet, GitCompare, KeyRound, LayoutDashboard, Loader2, LogOut, PanelLeftClose, PanelLeftOpen, ScanLine,
   ScrollText, Search, Send, ShieldAlert, ShieldCheck, Trash2, TriangleAlert, Users as UsersIcon, UserCog, Wallet, XCircle,
 } from 'lucide-react'
@@ -315,6 +315,13 @@ function Shell({ user, logout, setUser }) {
   const items = groups.flatMap(([g, list]) => list.map((it) => [...it, g]))
   const cur = items.find(([to]) => to === loc.pathname) || (loc.pathname === '/notifications' && ['', '알림', '', null, Bell, '내 알림'])
 
+  // 메뉴는 묶음 이름만 보이고, 누르면 펼친다. 지금 화면이 속한 묶음은 자동으로 펼친다
+  const [opened, setOpened] = useState(() => new Set(JSON.parse(localStorage.getItem('nav-open') || '[]')))
+  const saveOpen = (n) => { localStorage.setItem('nav-open', JSON.stringify([...n])); setOpened(n) }
+  const curGroup = cur?.[5]
+  useEffect(() => { if (curGroup && !opened.has(curGroup)) saveOpen(new Set([...opened, curGroup])) }, [curGroup]) // eslint-disable-line react-hooks/exhaustive-deps
+  const flip = (g) => { const n = new Set(opened); if (n.has(g)) n.delete(g); else n.add(g); saveOpen(n) }
+
   // 탭 제목에 화면 이름과 안 읽은 알림 수를 보여준다
   const n = unread?.count || 0
   useEffect(() => { document.title = lock ? '자리 비움 · 행정 구조대' : `${n ? `(${n > 99 ? '99+' : n}) ` : ''}${cur ? `${cur[1]} · ` : ''}행정 구조대` }, [cur?.[1], n, !lock]) // eslint-disable-line react-hooks/exhaustive-deps
@@ -359,14 +366,23 @@ function Shell({ user, logout, setUser }) {
       <aside className="sidebar">
         <button type="button" className="brand" onClick={toggle} title={collapsed ? '메뉴 펼치기' : '메뉴 접기'} aria-expanded={!collapsed}><Logo /><span className="brand-text">행정 구조대<small>통합 행정 시스템</small></span></button>
         <nav className="nav" aria-label="주 메뉴">
-          {groups.map(([g, list]) => (
-            <div key={g}>
-              <div className="nav-group">{g}</div>
-              {list.map(([to, label, code, , I]) => (
-                <NavLink key={to} to={to} end={to === '/'} title={collapsed ? label : undefined}><I size={18} /><span>{label}</span><small>{code}</small></NavLink>
-              ))}
-            </div>
-          ))}
+          {groups.map(([g, list]) => {
+            const open = collapsed || opened.has(g)
+            return (
+              <div key={g} className={`nav-sec${open ? ' open' : ''}`}>
+                <button type="button" className="nav-group" onClick={() => flip(g)} aria-expanded={open} disabled={collapsed}>
+                  <span>{g}</span><ChevronDown size={15} className="nav-chev" />
+                </button>
+                <div className="nav-items" inert={!open}>
+                  <div>
+                    {list.map(([to, label, code, , I]) => (
+                      <NavLink key={to} to={to} end={to === '/'} title={collapsed ? label : undefined}><I size={18} /><span>{label}</span><small>{code}</small></NavLink>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )
+          })}
         </nav>
         <div className="sidebar-foot">
           <div className="user-card" title={collapsed ? `${user.name} · ${ROLE[user.role]}` : undefined}>
