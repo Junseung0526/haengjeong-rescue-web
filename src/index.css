@@ -27,6 +27,7 @@
   --shadow-lg: 0 20px 48px -12px rgba(16, 24, 40, .25);
   --ease: cubic-bezier(.2, .8, .2, 1);
   --sidebar: 252px;
+  --content-max: 1480px;
   font-family: 'Pretendard GOV Variable', 'Pretendard Variable', Pretendard, -apple-system, 'Apple SD Gothic Neo', sans-serif;
   color: var(--text);
   background: var(--bg);
@@ -94,7 +95,7 @@ kbd { font-family: inherit; font-size: 11px; border: 1px solid var(--border); bo
 .icon-btn:hover { background: var(--bg); }
 .icon-btn .dot { position: absolute; top: 4px; right: 3px; min-width: 17px; height: 17px; border-radius: 9px; background: var(--danger); color: #fff; font-size: 10.5px; font-weight: 700; display: grid; place-items: center; padding: 0 4px; border: 2px solid #fff; }
 
-.content { padding: 28px 32px 56px; max-width: 1480px; width: 100%; animation: fadeUp .3s var(--ease); }
+.content { padding: 28px 32px 56px; max-width: var(--content-max); width: 100%; margin-inline: auto; animation: fadeUp .3s var(--ease); }
 @keyframes fadeUp { from { opacity: 0; transform: translateY(6px); } }
 
 .page-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; margin-bottom: 24px; flex-wrap: wrap; }
@@ -626,5 +627,9 @@ th { box-shadow: 0 1px 0 var(--border); }
 .palette-item .group.tip { color: #5b4fd6; font-weight: 600; }
 
 /* 저작권 바닥글 */
-.foot { margin-top: auto; display: flex; flex-wrap: wrap; justify-content: space-between; gap: 4px 16px; padding: 16px 32px 20px; border-top: 1px solid var(--border); color: var(--text-muted); font-size: 12.5px; max-width: 1480px; width: 100%; }
+.foot { margin-top: auto; display: flex; flex-wrap: wrap; justify-content: space-between; gap: 4px 16px; padding: 16px 32px 20px; border-top: 1px solid var(--border); color: var(--text-muted); font-size: 12.5px; max-width: var(--content-max); width: 100%; margin-inline: auto; }
 .auth-form .foot { position: absolute; left: 0; right: 0; bottom: 0; border-top: 0; padding: 16px 32px 20px calc(32px + clamp(0px, 4vw, 80px)); justify-content: flex-start; }
+
+/* 큰 모니터: 내용 폭을 넓히고 가운데 정렬 */
+@media (min-width: 1800px) { :root { --content-max: 1640px; } }
+@media (min-width: 2300px) { :root { --content-max: 1880px; } .content, .main > .foot { padding-left: 48px; padding-right: 48px; } }

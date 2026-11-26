@@ -75,6 +75,8 @@ class PageBoundary extends Component {
   }
 }
 
+const NARROW = '(max-width: 1279px)'
+
 const FEATS = [
   [FileSpreadsheet, '부서별 엑셀을 한 번에 취합하고 자동 검증'],
   [Calculator, '인건비·4대보험 귀속을 규칙대로 계산'],
@@ -251,7 +253,11 @@ function Palette({ items, onClose }) {
 function Shell({ user, logout, setUser }) {
   const [pw, setPw] = useState(false)
   const [pal, setPal] = useState(false)
-  const [collapsed, setCollapsed] = useState(() => localStorage.getItem('sidebar') === 'collapsed')
+  // 직접 접거나 펼친 선택이 우선, 없으면 1280px 미만 화면에서 자동으로 접는다
+  const [pref, setPref] = useState(() => localStorage.getItem('sidebar') || '')
+  const [narrow, setNarrow] = useState(() => matchMedia(NARROW).matches)
+  useEffect(() => { const m = matchMedia(NARROW); const on = () => setNarrow(m.matches); m.addEventListener('change', on); return () => m.removeEventListener('change', on) }, [])
+  const collapsed = pref ? pref === 'collapsed' : narrow
   const loc = useLocation()
   const calm = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
   const [intro, setIntro] = useState(() => !calm && !sessionStorage.getItem('intro'))
@@ -299,7 +305,7 @@ function Shell({ user, logout, setUser }) {
     document.addEventListener('pointermove', move, { passive: true })
     return () => document.removeEventListener('pointermove', move)
   }, [])
-  const toggle = () => { localStorage.setItem('sidebar', collapsed ? '' : 'collapsed'); setCollapsed(!collapsed) }
+  const toggle = () => { const v = collapsed ? 'open' : 'collapsed'; localStorage.setItem('sidebar', v); setPref(v) }
   const mac = /Mac/.test(navigator.platform)
 
   return (
