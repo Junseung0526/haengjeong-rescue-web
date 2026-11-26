@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Plus } from 'lucide-react'
 import { api } from '../api'
-import { Badge, Person, Card, PageHead, REASON, ROLE, Stat, Table, dt, num, useApi, useModal, useUrlState, resetDeptNames } from '../ui'
+import { Badge, Person, Card, PageHead, REASON, ROLE, Stat, Table, dt, num, useApi, useModal, useUrlState, resetDeptNames, useDeptNames } from '../ui'
 
 const ROLE_OPTS = Object.entries(ROLE)
 // "P1:D1, P2" ↔ [{project_code, department_code}]
@@ -9,10 +9,12 @@ const parseScopes = (s = '') => s.split(',').map((x) => x.trim()).filter(Boolean
   const [project_code, department_code] = x.split(':')
   return { project_code: project_code || null, department_code: department_code || null }
 })
-const showScopes = (sc) => (sc.length ? sc.map((s) => [s.project_code || '전체', s.department_code].filter(Boolean).join(':')).join(', ') : '전체')
+// names를 주면 부서를 이름으로 보여준다 (수정 폼은 코드 형식 그대로)
+const showScopes = (sc, names) => (sc.length ? sc.map((s) => [s.project_code || '전체', names?.get(s.department_code) ?? s.department_code].filter(Boolean).join(names ? ' · ' : ':')).join(', ') : '전체')
 const SCOPE_HINT = '사업:부서 형식, 쉼표로 구분. 예) P01 (사업 전체), P01:D03 (부서). 비우면 전체'
 
 export function Users() {
+  const names = useDeptNames()
   const [modal, open] = useModal()
   const users = useApi('/api/users')
 
@@ -61,7 +63,7 @@ export function Users() {
           { key: 'name', label: '이름', render: (r) => <Person name={r.name} /> },
           { key: 'username', label: '아이디', render: (r) => <span className="mono">{r.username}</span> },
           { key: 'role', label: '역할', render: (r) => ROLE[r.role] },
-          { key: 'scopes', label: '범위', render: (r) => showScopes(r.scopes) },
+          { key: 'scopes', label: '범위', render: (r) => showScopes(r.scopes, names) },
           { key: 'pii', label: '개인정보', render: (r) => (r.pii_access ? <Badge v="needs_review">출력 가능</Badge> : '-') },
           { key: 's', label: '상태', render: (r) => (r.locked ? <Badge v="rejected">잠김</Badge> : r.is_active ? <Badge v="active">사용</Badge> : <Badge v="exited">중지</Badge>) },
         ]} />

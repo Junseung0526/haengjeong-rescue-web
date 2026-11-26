@@ -268,13 +268,26 @@ export function useDeptNames() {
   const [map, setMap] = useState(null)
   useEffect(() => {
     deptReq ||= api.get('/api/departments')
-      .then((list) => new Map((list || []).map((d) => [d.department_code, d.department_name])))
+      .then((list) => Object.assign(new Map((list || []).map((d) => [d.department_code, d.department_name])), { list: list || [] }))
       .catch(() => { deptReq = null; return new Map() })
     let live = true
     deptReq.then((m) => live && setMap(m))
     return () => { live = false }
   }, [])
   return map
+}
+
+// 폼에서 코드를 직접 치지 않고 이름으로 고르게 한다. 목록을 아직 못 불러왔으면 입력칸으로 둔다
+export function deptField(depts, project, f = {}) {
+  const list = (depts?.list || []).filter((d) => !project || d.project_code === project)
+  const base = { name: 'department_code', label: '부서', ...f }
+  if (!list.length) return base
+  return { ...base, type: 'select', options: list.map((d) => [d.department_code, project ? d.department_name : `${d.department_name} (${d.project_code})`]) }
+}
+export function projectField(depts, f = {}) {
+  const list = [...new Set((depts?.list || []).map((d) => d.project_code))].sort()
+  const base = { name: 'project_code', label: '사업', ...f }
+  return list.length ? { ...base, type: 'select', options: list.map((p) => [p, p]) } : base
 }
 
 export function Dept({ code }) {
@@ -418,7 +431,7 @@ export function Field({ f, value, onChange }) {
     input = (
       <select {...common} value={value ?? ''} onChange={(e) => onChange(e.target.value)}>
         {!f.required && <option value="">선택 안 함</option>}
-        {f.required && value === undefined && <option value="">선택하세요</option>}
+        {f.required && (value ?? '') === '' && <option value="">선택하세요</option>}
         {f.options.map(([v, l]) => <option key={v} value={v}>{l}</option>)}
       </select>
     )

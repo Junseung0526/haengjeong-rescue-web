@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { CheckCircle2, CircleHelp, Equal, Info, Minus, Plus } from 'lucide-react'
 import { Tour, tourSeen } from '../agents'
-import { LABEL, Seg, num, won } from '../ui'
+import { LABEL, Seg, num, useDeptNames, won } from '../ui'
 
 // 급여 계산 근거: 서버가 저장한 rule_snapshot만으로 "어떻게 이 금액이 나왔는지"를 보여준다.
 // 시간 × 시급은 화면에서 단순 검산해, 서버 금액과 같으면 '검산 일치'를 표시한다.
@@ -38,6 +38,7 @@ function Row({ sign, label, formula, amount, check, total, strong }) {
 }
 
 export default function PayrollBreakdown({ snap }) {
+  const names = useDeptNames()
   const depts = snap.departments || []
   const [k, setK] = useState('all')
   const [tour, setTour] = useState(() => !tourSeen('bd'))
@@ -55,7 +56,7 @@ export default function PayrollBreakdown({ snap }) {
     <div className="bd">
       {tour && <Tour path="bd" onDone={() => setTour(false)} />}
       <div className="bd-top">
-        {depts.length > 1 && <Seg label="부서" value={k} onChange={setK} options={[['all', '전체 합계'], ...depts.map((d) => [d.department_code, d.department_code])]} />}
+        {depts.length > 1 && <Seg label="부서" value={k} onChange={setK} options={[['all', '전체 합계'], ...depts.map((d) => [d.department_code, names?.get(d.department_code) ?? d.department_code])]} />}
         <button type="button" className="btn ghost sm" onClick={() => setTour(true)}><CircleHelp size={14} />계산 근거 읽는 법</button>
       </div>
       <div className="bd-grid">

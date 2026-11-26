@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { api } from '../api'
-import { Badge, Card, PageHead, Table, Tabs, useApi, useApp, useModal, won, useUrlState } from '../ui'
+import { Badge, Card, PageHead, Table, Tabs, useApi, useApp, useDeptNames, deptField, useModal, won, useUrlState } from '../ui'
 
 const FILE_PATH = {
   'EX-01': '/api/exports/EX-01/file',
@@ -16,6 +16,7 @@ const PROJECT_ONLY = ['EX-01', 'EX-05']
 
 export default function Exports() {
   const { scope } = useApp()
+  const depts = useDeptNames()
   const [modal, open] = useModal()
   const [tab, setTab] = useUrlState('tab', 'formats')
   const ex = useApi('/api/exports/formats')
@@ -29,7 +30,7 @@ export default function Exports() {
       intro: pii ? '주민번호가 들어가 출력 권한·사유·파일 암호가 필요하고 감사 로그에 남습니다.' : `${scope.project_code || '조회 가능한 모든 사업'} · ${scope.work_month}`,
       initial: { department_code: scope.department_code },
       fields: [
-        !PROJECT_ONLY.includes(f.code) && { name: 'department_code', label: '부서코드', hint: '비우면 사업 전체' },
+        !PROJECT_ONLY.includes(f.code) && deptField(depts, scope.project_code, { hint: '고르지 않으면 사업 전체' }),
         pii && { name: 'reason', label: '출력 사유', required: true, type: 'textarea' },
         pii && { name: 'file_password', label: '파일 암호', type: 'password', required: true, hint: '8자 이상. 받는 사람에게 따로 전달하세요.' },
       ],
