@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { api } from '../api'
 import PayrollBreakdown from './PayrollBreakdown'
-import { Badge, Card, ErrorBox, Modal, PageHead, REASON, Stat, Table, Tabs, clean, num, useApi, useApp, useDeptNames, deptField, useModal, won, useUrlState, label, RECALC_REASON } from '../ui'
+import { Badge, Card, ErrorBox, Modal, PageHead, REASON, Stat, Table, Tabs, clean, num, useApi, useApp, useDeptNames, deptField, projName, useModal, won, useUrlState, label, RECALC_REASON } from '../ui'
 
 const AMOUNT_COLS = [
   { key: 'base_pay', label: '기본급', num: true, render: (r) => won(r.base_pay) },
@@ -158,6 +158,7 @@ const RULE_FIELDS = [
 
 function Rules() {
   const { scope } = useApp()
+  const depts = useDeptNames()
   const [modal, open] = useModal()
   const year = Number(scope.work_month.slice(0, 4))
   const rules = useApi(scope.project_code ? '/api/payroll/rules' : null, { project_code: scope.project_code, year })
@@ -184,7 +185,7 @@ function Rules() {
   })
 
   return (
-    <Card title={`${scope.project_code} · ${year}년 규칙`} actions={<button className="btn primary sm" onClick={create}>규칙 등록</button>}>
+    <Card title={`${projName(depts, scope.project_code)} · ${year}년 규칙`} actions={<button className="btn primary sm" onClick={create}>규칙 등록</button>}>
       <Table {...rules} rows={rules.data} onRow={edit} empty="등록된 규칙이 없습니다." emptyHint="규칙이 없으면 이 연도의 급여를 계산할 수 없습니다." columns={[
         { key: 'effective_month', label: '적용월' }, { key: 'version', label: '이름' },
         { key: 'wage_mode', label: '시급 방식', render: (r) => (r.wage_mode === 'fixed' ? `고정 ${won(r.hourly_wage)}` : '계약 시급') },

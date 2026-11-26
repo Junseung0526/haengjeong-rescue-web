@@ -1,12 +1,13 @@
 import { useState } from 'react'
 import { Upload } from 'lucide-react'
 import { api, form } from '../api'
-import { Badge, Card, INSURANCE, PageHead, REASON, Stat, Table, Tabs, date, num, useApi, useApp, useModal, won, useUrlState } from '../ui'
+import { Badge, Card, INSURANCE, PageHead, REASON, Stat, Table, Tabs, date, num, useApi, useApp, useDeptNames, projName, useModal, won, useUrlState } from '../ui'
 
 const COUNT_LABEL = { confirmed: '해당 사업 확정', needs_review: '확인 필요', other_project: '타 사업', not_target: '명단 외', unidentified: '판단 불가', zero_rows: '0원 행' }
 
 export default function Insurance() {
   const { scope } = useApp()
+  const depts = useDeptNames()
   const [modal, open] = useModal()
   const [tab, setTab] = useUrlState('tab', 'records')
   const [status, setStatus] = useUrlState('status')
@@ -108,7 +109,7 @@ export default function Insurance() {
           <Table {...wps} rows={wps.data} onRow={setWp} empty="연결된 사업장이 없습니다." columns={[
             { key: 'workplace_code', label: '사업장관리번호', render: (r) => <span className="mono">{r.workplace_code}</span> },
             { key: 'agency_group', label: '공단', render: (r) => (r.agency_group === 'comwel' ? '근로복지공단(고용·산재)' : '건강보험·국민연금') },
-            { key: 'project_codes', label: '사업', render: (r) => r.project_codes.join(', ') },
+            { key: 'project_codes', label: '사업', render: (r) => r.project_codes.map((c) => projName(depts, c)).join(', ') },
           ]} />
         </Card>
       )}

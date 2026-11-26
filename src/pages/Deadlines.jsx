@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Plus } from 'lucide-react'
 import { api } from '../api'
-import { Badge, Card, ErrorBox, Modal, PageHead, REASON, Stat, Table, Tabs, dt, useApi, useApp, useDeptNames, useModal, useUrlState } from '../ui'
+import { Badge, Card, ErrorBox, Modal, PageHead, REASON, Stat, Table, Tabs, dt, useApi, useApp, useDeptNames, projName, projectField, useModal, useUrlState } from '../ui'
 
 const DATES = [
   { name: 'request_date', label: '제출 요청일', type: 'date', required: true },
@@ -13,6 +13,7 @@ const STAGE = { request: '요청', due: '마감', final_reminder: '최종 독촉
 
 export default function Deadlines() {
   const { scope } = useApp()
+  const depts = useDeptNames()
   const [modal, open] = useModal()
   const [sel, setSel] = useState(null)
   const list = useApi('/api/deadlines', { project_code: scope.project_code })
@@ -21,7 +22,7 @@ export default function Deadlines() {
     title: '마감 일정 등록', cols: true,
     intro: '사업·업무월당 한 건입니다. 일정에 맞춰 미제출 부서에 독촉 알림이 갑니다.',
     initial: { project_code: scope.project_code, work_month: scope.work_month },
-    fields: [{ name: 'project_code', label: '사업코드', required: true }, { name: 'work_month', label: '업무월', type: 'month', required: true }, ...DATES],
+    fields: [projectField(depts, { required: true }), { name: 'work_month', label: '업무월', type: 'month', required: true }, ...DATES],
     onSubmit: async (v) => { await api.post('/api/deadlines', v); list.reload() },
   })
   const edit = (s) => open({
@@ -80,7 +81,7 @@ function Status({ s, onClose }) {
   const sum = status.data?.summary
   const notFound = status.error?.status === 404 || status.error?.status === 422
   return (
-    <Modal wide title={`${s.project_code} · ${s.work_month} 제출 현황`} onClose={onClose}
+    <Modal wide title={`${projName(depts, s.project_code)} · ${s.work_month} 제출 현황`} onClose={onClose}
       footer={<><button className="btn" onClick={refresh}>대상 자동 선정</button><button className="btn primary" disabled={!t || !t.has_unconfirmed_changes && t.confirmed_revision !== null} onClick={confirmT}>대상 확정</button></>}>
       {t?.has_unconfirmed_changes && <div className="alert warn">확정하지 않은 대상 변경이 있습니다.</div>}
       {notFound ? <div className="alert info">제출 대상을 선정하고 확정하면 현황이 나옵니다.</div> : <ErrorBox error={status.error} />}
