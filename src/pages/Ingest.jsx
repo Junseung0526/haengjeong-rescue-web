@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { api, form } from '../api'
 import { Check, CheckCircle2, Eye, Loader2, Upload } from 'lucide-react'
-import { Alert, Card, Dropzone, ErrorBox, PageHead, REASON, RowActions, Stat, Table, dt, num, useApi, useApp, useModal } from '../ui'
+import { Alert, Card, Dropzone, ErrorBox, PageHead, REASON, RowActions, Stat, Table, dt, num, useApi, useApp, useDeptNames, useModal } from '../ui'
 import { ISSUE_COLS } from './Submissions'
 
 const SCAN_STEPS = ['시트 구조를 읽는 중', '머리글 행을 찾는 중', '참여자 행과 합계 행을 구분하는 중', '금액·주민번호 형식을 검증하는 중', '전월 자료와 대조하는 중']
@@ -22,6 +22,7 @@ function Scanning({ commit }) {
 
 export default function Ingest() {
   const { scope, toast } = useApp()
+  const opts = (useDeptNames()?.list || []).filter((d) => d.project_code === scope.project_code)
   const [modal, open] = useModal()
   const [v, setV] = useState({})
   const [result, setResult] = useState(null)
@@ -66,7 +67,13 @@ export default function Ingest() {
         </div>
         {!scope.project_code && <Alert type="warn">상단에서 사업을 먼저 선택하세요.</Alert>}
         <div className="form cols" style={{ gridTemplateColumns: '220px 1fr', alignItems: 'start' }}>
-          <label className="field"><span>부서코드<em>*</em></span><input className="input" value={v.department_code ?? scope.department_code} onChange={(e) => setV({ ...v, department_code: e.target.value })} />
+          <label className="field"><span>부서<em>*</em></span>
+            {opts.length
+              ? <select className="input" value={v.department_code ?? scope.department_code} onChange={(e) => setV({ ...v, department_code: e.target.value })}>
+                  <option value="">선택하세요</option>
+                  {opts.map((d) => <option key={d.department_code} value={d.department_code}>{d.department_name}</option>)}
+                </select>
+              : <input className="input" value={v.department_code ?? scope.department_code} onChange={(e) => setV({ ...v, department_code: e.target.value })} />}
             <small>사업 {scope.project_code || '-'} · 업무월 {scope.work_month}</small></label>
           <div className="field"><span>엑셀 파일<em>*</em></span><Dropzone accept=".xlsx,.xls" value={v.file} onChange={(f) => { setV({ ...v, file: f }); setResult(null) }} /></div>
         </div>

@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { api } from '../api'
 import PayrollBreakdown from './PayrollBreakdown'
-import { Badge, Card, ErrorBox, Modal, PageHead, REASON, Stat, Table, Tabs, clean, num, useApi, useApp, useModal, won, useUrlState, label, RECALC_REASON } from '../ui'
+import { Badge, Card, ErrorBox, Modal, PageHead, REASON, Stat, Table, Tabs, clean, num, useApi, useApp, useDeptNames, deptField, useModal, won, useUrlState, label, RECALC_REASON } from '../ui'
 
 const AMOUNT_COLS = [
   { key: 'base_pay', label: '기본급', num: true, render: (r) => won(r.base_pay) },
@@ -74,6 +74,7 @@ function People() {
 
 function PayrollDetail({ p, onClose }) {
   const { scope } = useApp()
+  const depts = useDeptNames()
   const [modal, open] = useModal()
   const r = useApi(`/api/payroll/${p.participation_id}`, { work_month: scope.work_month })
   const d = r.data
@@ -86,7 +87,7 @@ function PayrollDetail({ p, onClose }) {
     cols: true,
     initial: { department_code: p.department_code, weekly_holiday_hours: 0, unused_annual_leave_hours: 0, worker_deductions: 0, employer_contributions: 0, insurance_mode: 'manual', annual_leave_opening_hours: 0, annual_leave_earned_months: '0' },
     fields: [
-      { name: 'department_code', label: '부서', required: true },
+      deptField(depts, p.project_code || scope.project_code, { required: true }),
       { name: 'insurance_mode', label: '보험료 반영', type: 'select', required: true, options: [['manual', '수기 공제'], ['linked', '확정 보험료 연결']] },
       { name: 'weekly_holiday_hours', label: '주휴 시간', type: 'number', step: '0.5', required: true },
       { name: 'unused_annual_leave_hours', label: '미사용 연차 정산 시간', type: 'number', step: '0.5', required: true },

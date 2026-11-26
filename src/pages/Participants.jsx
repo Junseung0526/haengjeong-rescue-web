@@ -1,10 +1,11 @@
 import { useState } from 'react'
 import { Pencil, UserPlus } from 'lucide-react'
 import { api } from '../api'
-import { Badge, Person, Card, ErrorBox, Modal, PageHead, REASON, Table, clean, date, num, useApi, useApp, useModal, won, useUrlState } from '../ui'
+import { Badge, Person, Card, ErrorBox, Modal, PageHead, REASON, Table, clean, date, num, useApi, useApp, useDeptNames, deptField, projectField, useModal, won, useUrlState } from '../ui'
 
 export default function Participants() {
   const { scope } = useApp()
+  const depts = useDeptNames()
   const [modal, open] = useModal()
   const [status, setStatus] = useUrlState('status')
   const [person, setPerson] = useState(null)
@@ -18,8 +19,8 @@ export default function Participants() {
     fields: [
       { name: 'name', label: '성명', required: true },
       { name: 'resident_num', label: '주민등록번호', required: true, placeholder: '000000-0000000' },
-      { name: 'project_code', label: '사업코드', required: true },
-      { name: 'department_code', label: '부서코드', required: true },
+      projectField(depts, { required: true }),
+      deptField(depts, scope.project_code, { required: true }),
       { name: 'start_date', label: '참여 시작일', type: 'date', required: true },
       { name: 'end_date', label: '참여 종료일', type: 'date' },
       { name: 'contract_hours', label: '1일 계약시간', type: 'number', required: true, hint: '1~8시간' },
@@ -36,7 +37,7 @@ export default function Participants() {
     title: `${r.name} 부서 이동`,
     intro: '적용일부터 새 부서로 배치되고, 이전 배치는 전날로 끝납니다.',
     fields: [
-      { name: 'department_code', label: '새 부서코드', required: true },
+      deptField(depts, r.project_code, { label: '새 부서', required: true }),
       { name: 'effective_date', label: '적용일', type: 'date', required: true },
       { ...REASON, required: false },
     ],

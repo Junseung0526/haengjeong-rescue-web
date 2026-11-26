@@ -1,10 +1,11 @@
 import { useState } from 'react'
 import { Upload } from 'lucide-react'
 import { api, form } from '../api'
-import { Badge, Card, ErrorBox, Modal, PageHead, REASON, Stat, Table, Tabs, dt, num, useApi, useApp, useDeptNames, useModal, won } from '../ui'
+import { Badge, Card, ErrorBox, Modal, PageHead, REASON, Stat, Table, Tabs, dt, num, useApi, useApp, useDeptNames, deptField, projectField, useModal, won } from '../ui'
 
 export default function Submissions() {
   const { scope, toast } = useApp()
+  const depts = useDeptNames()
   const [modal, open] = useModal()
   const [sel, setSel] = useState(null)
   const list = useApi('/api/submissions', { project_code: scope.project_code, department_code: scope.department_code, work_month: scope.work_month })
@@ -14,8 +15,8 @@ export default function Submissions() {
     intro: '표준 양식의 열 구조 그대로 채워 올립니다. 업로드하면 임시저장되고, 내용을 확인한 뒤 제출합니다.',
     initial: { project_code: scope.project_code, department_code: scope.department_code, work_month: scope.work_month },
     fields: [
-      { name: 'project_code', label: '사업코드', required: true },
-      { name: 'department_code', label: '부서코드', required: true },
+      projectField(depts, { required: true }),
+      deptField(depts, scope.project_code, { required: true }),
       { name: 'work_month', label: '업무월', type: 'month', required: true },
       { name: 'file', label: '엑셀 파일', type: 'file', accept: '.xlsx,.xls', required: true, full: true },
     ],

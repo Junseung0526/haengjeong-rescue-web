@@ -1,13 +1,14 @@
 import { useEffect, useState } from 'react'
 import { ScanLine, Upload } from 'lucide-react'
 import { api, form } from '../api'
-import { Badge, Card, Empty, ErrorBox, PageHead, REASON, Table, useApi, useApp, useModal, label, JOB_STATE } from '../ui'
+import { Badge, Card, Empty, ErrorBox, PageHead, REASON, Table, useApi, useApp, useDeptNames, deptField, projectField, useModal, label, JOB_STATE } from '../ui'
 
 const FIELD = { name: '성명', date: '날짜', work_kind: '근무 구분' }
 const recent = () => JSON.parse(localStorage.getItem('ocr_recent') || '[]')
 
 export default function Ocr() {
   const { scope } = useApp()
+  const depts = useDeptNames()
   const [modal, open] = useModal()
   const [files, setFiles] = useState(recent)
   const [sel, setSel] = useState(files[0]?.id || null)
@@ -28,7 +29,7 @@ export default function Ocr() {
     initial: { project_code: scope.project_code, department_code: scope.department_code, work_month: scope.work_month },
     cols: true,
     fields: [
-      { name: 'project_code', label: '사업코드', required: true }, { name: 'department_code', label: '부서코드', required: true },
+      projectField(depts, { required: true }), deptField(depts, scope.project_code, { required: true }),
       { name: 'work_month', label: '업무월', type: 'month', required: true },
       { name: 'file', label: '스캔 파일', type: 'file', required: true, accept: '.pdf,.jpg,.jpeg,.png,.tif,.tiff', full: true },
       { name: 'reference', label: '인건비 엑셀', type: 'file', required: true, accept: '.xlsx,.xls', full: true },
