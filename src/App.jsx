@@ -1,4 +1,5 @@
-import { Component, useCallback, useEffect, useMemo, useState } from 'react'
+import { Component, useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { BrowserRouter, Navigate, NavLink, Route, Routes, useLocation, useNavigate } from 'react-router-dom'
 import {
   Bell, Building2, CircleHelp, CalendarCheck, CalendarClock, Calculator, CheckCircle2, ChevronRight, ClipboardCheck, Command, Eye, EyeOff,
@@ -84,6 +85,50 @@ const FEATS = [
 ]
 
 // 모든 화면 맨 아래 저작권·이용 안내
+// 자리 비움 화면: 일정 시간 작동이 없거나 상단 버튼을 누르면 개인정보가 보이지 않게 화면을 가린다
+const IDLE_MIN = 5
+const ACTIVITY = ['pointermove', 'pointerdown', 'keydown', 'wheel', 'touchstart']
+
+function usePrivacy() {
+  const [lock, setLock] = useState(null) // { at, idle }
+  useEffect(() => {
+    let last = Date.now()
+    const on = () => { last = Date.now() }
+    ACTIVITY.forEach((e) => window.addEventListener(e, on, { passive: true, capture: true }))
+    const t = setInterval(() => { if (Date.now() - last >= IDLE_MIN * 60000) setLock((l) => l || { at: last + IDLE_MIN * 60000, idle: true }) }, 10000)
+    return () => { clearInterval(t); ACTIVITY.forEach((e) => window.removeEventListener(e, on, { capture: true })) }
+  }, [])
+  return [lock, setLock]
+}
+
+function Privacy({ user, lock, onBack }) {
+  const [now, setNow] = useState(() => new Date())
+  const box = useRef(null)
+  useEffect(() => { const t = setInterval(() => setNow(new Date()), 10000); return () => clearInterval(t) }, [])
+  // 뒤 화면(열린 창 포함)은 키보드·스크린리더로도 닿지 않게 한다
+  useEffect(() => {
+    const others = [...document.body.children].filter((e) => e !== box.current)
+    const prev = document.activeElement
+    others.forEach((e) => { e.inert = true })
+    box.current.querySelector('button').focus()
+    return () => { others.forEach((e) => { e.inert = false }); prev?.focus?.() }
+  }, [])
+  const mins = Math.floor((now - lock.at) / 60000)
+  return createPortal(
+    <div className="privacy" ref={box} role="dialog" aria-modal="true" aria-labelledby="privacy-title">
+      <div className="privacy-col">
+        <time className="privacy-clock">{now.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit', hour12: false })}</time>
+        <p className="privacy-date">{now.toLocaleDateString('ko-KR', { month: 'long', day: 'numeric', weekday: 'long' })}</p>
+        <div className="privacy-user"><span className="avatar">{user.name?.[0]}</span><div><b id="privacy-title">{user.name}</b><small>{ROLE[user.role]}</small></div></div>
+        <span className="privacy-pill"><EyeOff size={14} />{lock.idle ? `${IDLE_MIN}분 동안 작업이 없어 화면을 가렸습니다` : '자리 비움'} · {mins < 1 ? '방금' : `${mins}분 전부터`}</span>
+        <button className="btn primary privacy-back" onClick={onBack}>업무로 돌아가기</button>
+        <p className="privacy-hint">개인정보 보호를 위해 내용을 가렸습니다. 돌아가면 보던 화면 그대로 이어집니다.</p>
+      </div>
+    </div>,
+    document.body,
+  )
+}
+
 function Footer() {
   return (
     <footer className="foot">
@@ -253,6 +298,7 @@ function Palette({ items, onClose }) {
 function Shell({ user, logout, setUser }) {
   const [pw, setPw] = useState(false)
   const [pal, setPal] = useState(false)
+  const [lock, setLock] = usePrivacy()
   // 직접 접거나 펼친 선택이 우선, 없으면 1280px 미만 화면에서 자동으로 접는다
   const [pref, setPref] = useState(() => localStorage.getItem('sidebar') || '')
   const [narrow, setNarrow] = useState(() => matchMedia(NARROW).matches)
@@ -271,7 +317,7 @@ function Shell({ user, logout, setUser }) {
 
   // 탭 제목에 화면 이름과 안 읽은 알림 수를 보여준다
   const n = unread?.count || 0
-  useEffect(() => { document.title = `${n ? `(${n > 99 ? '99+' : n}) ` : ''}${cur ? `${cur[1]} · ` : ''}행정 구조대` }, [cur?.[1], n]) // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { document.title = lock ? '자리 비움 · 행정 구조대' : `${n ? `(${n > 99 ? '99+' : n}) ` : ''}${cur ? `${cur[1]} · ` : ''}행정 구조대` }, [cur?.[1], n, !lock]) // eslint-disable-line react-hooks/exhaustive-deps
   // 내용을 내리면 상단 바에 그림자를 깐다
   const [scrolled, setScrolled] = useState(false)
   useEffect(() => {
@@ -338,6 +384,7 @@ function Shell({ user, logout, setUser }) {
           <div className="spacer" />
           <ContextBar />
           <button className="kbd-btn" onClick={() => setPal(true)}><Search size={15} /><span style={{ flex: 1, textAlign: 'left' }}>메뉴 검색</span><kbd>{mac ? <><Command size={11} />K</> : 'Ctrl K'}</kbd></button>
+          <button className="icon-btn" onClick={() => { setPal(false); setLock({ at: Date.now(), idle: false }) }} aria-label="화면 가리기 (자리 비움)" title="화면 가리기 · 자리 비움"><EyeOff size={19} /></button>
           <button className="icon-btn" onClick={() => setTour(loc.pathname)} aria-label="이 화면 안내 보기" title="이 화면 안내 보기"><CircleHelp size={19} /></button>
           <NavLink to="/notifications" className="icon-btn" aria-label={`알림${unread?.count ? ` ${unread.count}건` : ''}`}>
             <Bell size={19} />{unread?.count > 0 && <span className="dot" key={unread.count}>{unread.count > 99 ? '99+' : unread.count}</span>}
@@ -357,6 +404,7 @@ function Shell({ user, logout, setUser }) {
       {tour && <Tour key={tour} path={tour} onDone={() => setTour(null)} />}
       {intro && <Intro user={user} onDone={() => { sessionStorage.setItem('intro', '1'); setIntro(false) }} />}
       {pal && <Palette items={items} onClose={() => setPal(false)} />}
+      {lock && <Privacy user={user} lock={lock} onBack={() => setLock(null)} />}
       {pw && <ChangePassword onDone={() => setUser({ ...user, must_change_password: false })} onClose={() => setPw(false)} />}
     </div>
   )
