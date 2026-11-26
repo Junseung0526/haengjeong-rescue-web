@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { api } from '../api'
-import { Badge, Card, PageHead, Table, Tabs, useApi, useApp, useDeptNames, deptField, useModal, won, useUrlState } from '../ui'
+import { Badge, Card, PageHead, Table, Tabs, useApi, useApp, useDeptNames, deptField, projName, useModal, won, useUrlState } from '../ui'
 
 const FILE_PATH = {
   'EX-01': '/api/exports/EX-01/file',
@@ -27,7 +27,7 @@ export default function Exports() {
     const pii = f.contains_pii
     open({
       title: `${f.name} 만들기`,
-      intro: pii ? '주민번호가 들어가 출력 권한·사유·파일 암호가 필요하고 감사 로그에 남습니다.' : `${scope.project_code || '조회 가능한 모든 사업'} · ${scope.work_month}`,
+      intro: pii ? '주민번호가 들어가 출력 권한·사유·파일 암호가 필요하고 감사 로그에 남습니다.' : `${scope.project_code ? projName(depts, scope.project_code) : '조회 가능한 모든 사업'} · ${scope.work_month}`,
       initial: { department_code: scope.department_code },
       fields: [
         !PROJECT_ONLY.includes(f.code) && deptField(depts, scope.project_code, { hint: '고르지 않으면 사업 전체' }),
@@ -48,7 +48,7 @@ export default function Exports() {
 
   return (
     <>
-      <PageHead tag="FN-07 · FN-16" title="제출 양식 출력" desc={`공단·일모아·인사랑 제출 파일을 만듭니다. 기준: ${scope.project_code || '사업 미선택'} · ${scope.work_month}`} />
+      <PageHead tag="FN-07 · FN-16" title="제출 양식 출력" desc={`공단·일모아·인사랑 제출 파일을 만듭니다. 기준: ${scope.project_code ? projName(depts, scope.project_code) : '사업 미선택'} · ${scope.work_month}`} />
       <Tabs value={tab} onChange={setTab} tabs={[['formats', '양식'], ['ex02', '자격 취득·상실 신고'], ['bulk', '일괄 등록 대상']]} />
       {tab === 'formats' && (
         <Card>

@@ -8,7 +8,7 @@ import {
 } from 'lucide-react'
 import { api, getToken, setToken } from './api'
 import { Intro, Tour, tourSeen } from './agents'
-import { AppCtx, ErrorBox, Logo, FormModal, ROLE, thisMonth, useApi, useApp } from './ui'
+import { AppCtx, ErrorBox, Logo, FormModal, ROLE, projName, thisMonth, useApi, useApp, useDeptNames } from './ui'
 import Dashboard from './pages/Dashboard'
 import Participants from './pages/Participants'
 import Submissions from './pages/Submissions'
@@ -218,7 +218,8 @@ function ChangePassword({ forced, onDone, onClose }) {
 function ContextBar() {
   const { scope, setScope } = useApp()
   const { data: depts } = useApi('/api/departments')
-  const projects = [...new Set((depts || []).map((d) => d.project_code))].sort()
+  const names = useDeptNames()
+  const projects = [...new Set([...(names?.projects?.list || []).map((p) => p.project_code), ...(depts || []).map((d) => d.project_code)])].sort()
   const deptOpts = (depts || []).filter((d) => d.project_code === scope.project_code)
   // 맡은 사업이 하나뿐이면 고를 필요 없이 바로 선택한다
   useEffect(() => {
@@ -232,8 +233,8 @@ function ContextBar() {
           onChange={(e) => setScope({ ...scope, project_code: e.target.value, department_code: '' })}>
           <option value="">전체</option>
           {/* 저장돼 있던 사업이 목록에 없어도 사라지지 않게 */}
-          {scope.project_code && !projects.includes(scope.project_code) && <option value={scope.project_code}>{scope.project_code}</option>}
-          {projects.map((p) => <option key={p} value={p}>{p}</option>)}
+          {scope.project_code && !projects.includes(scope.project_code) && <option value={scope.project_code}>{projName(names, scope.project_code)}</option>}
+          {projects.map((p) => <option key={p} value={p}>{projName(names, p)}</option>)}
         </select>
       </div>
       <span className="ctx-sep" />

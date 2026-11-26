@@ -260,34 +260,39 @@ export function Empty({ title = '표시할 내용이 없습니다.', hint, icon:
 /* ---------- 표 ---------- */
 // columns: [{ key, label, render(row), num, sort?: false }]
 // search: 검색창 표시 (행이 많으면 자동), tools: 검색창 옆 추가 요소
-// 부서 코드 → 이름. 한 번만 불러와 모든 표가 같이 쓴다
-// shortcut: 코드만으로 찾으므로 사업이 달라도 코드가 같으면 같은 이름이 나온다. 겹치는 코드가 생기면 사업 코드까지 키로 쓸 것
-let deptReq = null
-export const resetDeptNames = () => { deptReq = null }
-export function useDeptNames() {
-  const [map, setMap] = useState(null)
+// 코드 → 이름 목록. 한 번만 불러와 모든 화면이 같이 쓴다
+// shortcut: 부서는 코드만으로 찾으므로 사업이 달라도 코드가 같으면 같은 이름이 나온다. 겹치는 코드가 생기면 사업 코드까지 키로 쓸 것
+const nameCache = {}
+const toMap = (list, k, n) => Object.assign(new Map((list || []).map((d) => [d[k], d[n]])), { list: list || [] })
+export const resetNames = () => { for (const k in nameCache) delete nameCache[k] }
+export const resetDeptNames = resetNames
+function useCached(key, load) {
+  const [v, setV] = useState(null)
   useEffect(() => {
-    deptReq ||= api.get('/api/departments')
-      .then((list) => Object.assign(new Map((list || []).map((d) => [d.department_code, d.department_name])), { list: list || [] }))
-      .catch(() => { deptReq = null; return new Map() })
+    nameCache[key] ||= load().catch(() => { delete nameCache[key]; return null })
     let live = true
-    deptReq.then((m) => live && setMap(m))
+    nameCache[key].then((x) => live && setV(x))
     return () => { live = false }
-  }, [])
-  return map
+  }, [key]) // eslint-disable-line react-hooks/exhaustive-deps
+  return v
 }
+// 부서 이름 Map. 사업 이름은 .projects에 함께 담는다
+export const useDeptNames = () => useCached('dept', () => Promise.all([api.get('/api/departments'), api.get('/api/projects').catch(() => [])])
+  .then(([d, pr]) => Object.assign(toMap(d, 'department_code', 'department_name'), { projects: toMap(pr, 'project_code', 'project_name') })))
+export const useAgencyNames = () => useCached('agency', () => api.get('/api/agencies').then((l) => toMap(l, 'agency_code', 'agency_name')))
+export const projName = (depts, code) => depts?.projects?.get(code) ?? code
 
 // 폼에서 코드를 직접 치지 않고 이름으로 고르게 한다. 목록을 아직 못 불러왔으면 입력칸으로 둔다
 export function deptField(depts, project, f = {}) {
   const list = (depts?.list || []).filter((d) => !project || d.project_code === project)
   const base = { name: 'department_code', label: '부서', ...f }
   if (!list.length) return base
-  return { ...base, type: 'select', options: list.map((d) => [d.department_code, project ? d.department_name : `${d.department_name} (${d.project_code})`]) }
+  return { ...base, type: 'select', options: list.map((d) => [d.department_code, project ? d.department_name : `${d.department_name} (${projName(depts, d.project_code)})`]) }
 }
 export function projectField(depts, f = {}) {
-  const list = [...new Set((depts?.list || []).map((d) => d.project_code))].sort()
+  const list = [...new Set([...(depts?.projects?.list || []).map((p) => p.project_code), ...(depts?.list || []).map((d) => d.project_code)])].sort()
   const base = { name: 'project_code', label: '사업', ...f }
-  return list.length ? { ...base, type: 'select', options: list.map((p) => [p, p]) } : base
+  return list.length ? { ...base, type: 'select', options: list.map((p) => [p, projName(depts, p)]) } : base
 }
 
 export function Dept({ code }) {
@@ -301,18 +306,21 @@ export function Table({ columns, rows, loading, error, onRow, empty = '표시할
   const [sort, setSort] = useState(null) // [key, dir]
   const showTools = search ?? (rows?.length > 8 || !!tools)
   const depts = useDeptNames()
+  const agencies = useAgencyNames()
+  // 코드 열은 이름으로 보이고, 검색·정렬도 이름 기준
+  const nameOf = (k, code) => (k === 'department_code' ? depts?.get(code) : k === 'project_code' ? depts?.projects?.get(code) : k === 'agency_code' ? agencies?.get(code) : undefined)
 
   const view = useMemo(() => {
     let r = rows || []
     if (q) {
       const needle = q.toLowerCase()
-      r = r.filter((row) => columns.some((c) => c.key && `${row[c.key] ?? ''} ${c.key === 'department_code' ? depts?.get(row[c.key]) ?? '' : ''}`.toLowerCase().includes(needle)))
+      r = r.filter((row) => columns.some((c) => c.key && `${row[c.key] ?? ''} ${nameOf(c.key, row[c.key]) ?? ''}`.toLowerCase().includes(needle)))
     }
     if (sort) {
       const [k, d] = sort
       r = [...r].sort((a, b) => {
         // 부서는 코드가 아니라 화면에 보이는 이름 순으로
-        const name = (v) => (k === 'department_code' ? depts?.get(v) ?? v : v)
+        const name = (v) => nameOf(k, v) ?? v
         const x = name(a[k]), y = name(b[k])
         const nx = Number(x), ny = Number(y)
         const c = x !== null && y !== null && x !== '' && y !== '' && !isNaN(nx) && !isNaN(ny) ? nx - ny : String(x ?? '').localeCompare(String(y ?? ''), 'ko')
@@ -320,7 +328,7 @@ export function Table({ columns, rows, loading, error, onRow, empty = '표시할
       })
     }
     return r
-  }, [rows, q, sort, columns, depts])
+  }, [rows, q, sort, columns, depts, agencies]) // eslint-disable-line react-hooks/exhaustive-deps
 
   if (error) return <div className="card-body"><ErrorBox error={error} /></div>
   const toggle = (c) => {
@@ -366,7 +374,7 @@ export function Table({ columns, rows, loading, error, onRow, empty = '표시할
                 <tr key={r.id || r.participation_id || i} style={{ '--i': i }} className={onRow ? 'click' : ''} onClick={onRow ? () => onRow(r) : undefined}
                   tabIndex={onRow ? 0 : undefined} onKeyDown={onRow ? (e) => e.key === 'Enter' && onRow(r) : undefined}>
                   {columns.map((c) => (
-                    <td key={c.key || c.label} className={c.num ? 'num' : ''}>{c.render ? c.render(r) : c.key === 'department_code' ? <Dept code={r[c.key]} /> : (r[c.key] ?? '-')}</td>
+                    <td key={c.key || c.label} className={c.num ? 'num' : ''}>{c.render ? c.render(r) : nameOf(c.key, r[c.key]) ? <span title={r[c.key]}>{nameOf(c.key, r[c.key])}</span> : (r[c.key] ?? '-')}</td>
                   ))}
                 </tr>
               ))}

@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Plus } from 'lucide-react'
 import { api } from '../api'
-import { Badge, Person, Card, PageHead, REASON, ROLE, Stat, Table, dt, num, useApi, useModal, useUrlState, resetDeptNames, useDeptNames } from '../ui'
+import { Badge, Person, Card, PageHead, REASON, ROLE, Stat, Table, dt, num, useApi, useModal, useUrlState, resetDeptNames, useDeptNames, projName } from '../ui'
 
 const ROLE_OPTS = Object.entries(ROLE)
 // "P1:D1, P2" ↔ [{project_code, department_code}]
@@ -10,7 +10,7 @@ const parseScopes = (s = '') => s.split(',').map((x) => x.trim()).filter(Boolean
   return { project_code: project_code || null, department_code: department_code || null }
 })
 // names를 주면 부서를 이름으로 보여준다 (수정 폼은 코드 형식 그대로)
-const showScopes = (sc, names) => (sc.length ? sc.map((s) => [s.project_code || '전체', names?.get(s.department_code) ?? s.department_code].filter(Boolean).join(names ? ' · ' : ':')).join(', ') : '전체')
+const showScopes = (sc, names) => (sc.length ? sc.map((s) => [s.project_code ? (names ? projName(names, s.project_code) : s.project_code) : '전체', names?.get(s.department_code) ?? s.department_code].filter(Boolean).join(names ? ' · ' : ':')).join(', ') : '전체')
 const SCOPE_HINT = '사업:부서 형식, 쉼표로 구분. 예) P01 (사업 전체), P01:D03 (부서). 비우면 전체'
 
 export function Users() {

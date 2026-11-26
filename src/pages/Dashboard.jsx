@@ -4,7 +4,7 @@ import ClosePipeline from './ClosePipeline'
 import { Link } from 'react-router-dom'
 import { api } from '../api'
 import { AlertOctagon, AlertTriangle, ArrowRight, CheckCircle2, CircleCheck, Check, FileSearch, Info, Sparkles, Inbox, Landmark, ListTodo, UserCheck, Users } from 'lucide-react'
-import { Badge, Bar, Card, Dept, Live, useInterval, ErrorBox, PageHead, REASON, RowActions, Seg, Stat, Table, WORK_KIND, date, num, today, useApi, useApp, useModal, won, useUrlState } from '../ui'
+import { Badge, Bar, Card, Dept, Live, projName, useDeptNames, useInterval, ErrorBox, PageHead, REASON, RowActions, Seg, Stat, Table, WORK_KIND, date, num, today, useApi, useApp, useModal, won, useUrlState } from '../ui'
 
 // 업무월이 이번 달이면 오늘, 지난 달이면 그 달 말일 기준
 export const asOf = (month) => {
@@ -142,6 +142,7 @@ const pct = (m) => (m?.availability === 'available' ? `${Number(m.value).toFixed
 
 export default function Dashboard() {
   const { scope } = useApp()
+  const depts = useDeptNames()
   const [modal, open] = useModal()
   const [state, setState] = useUrlState('state', 'unprocessed')
   const q = { project_code: scope.project_code, department_code: scope.department_code, work_month: scope.work_month }
@@ -210,7 +211,7 @@ export default function Dashboard() {
 
   return (
     <>
-      <PageHead tag="FN-08" title="현황 대시보드" desc={`${scope.project_code || '전체 사업'} · ${scope.work_month} 기준 (${asOf(scope.work_month)})`}>
+      <PageHead tag="FN-08" title="현황 대시보드" desc={`${scope.project_code ? projName(depts, scope.project_code) : '전체 사업'} · ${scope.work_month} 기준 (${asOf(scope.work_month)})`}>
         <Live at={at} onRefresh={refresh} busy={busy} />
       </PageHead>
       <ErrorBox error={s.error} />
