@@ -143,7 +143,6 @@ export function Intro({ user, onDone }) {
   const title = '행정 구조대'
   return (
     <div className={`intro${out ? ' out' : ''}`} onClick={skip} role="status" aria-label="시스템 준비 중">
-      <div className="intro-grid" />
       <div className="intro-center">
         <div className="intro-ring"><Logo className="intro-mark" /></div>
         <h1 className="intro-title">{[...title].map((c, k) => <span key={k} style={{ animationDelay: `${0.35 + k * 0.06}s` }}>{c === ' ' ? ' ' : c}</span>)}</h1>
