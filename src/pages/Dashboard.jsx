@@ -4,7 +4,7 @@ import ClosePipeline from './ClosePipeline'
 import { Link } from 'react-router-dom'
 import { api } from '../api'
 import { AlertOctagon, AlertTriangle, ArrowRight, CheckCircle2, CircleCheck, Check, FileSearch, Info, Sparkles, Inbox, Landmark, ListTodo, UserCheck, Users } from 'lucide-react'
-import { Badge, Bar, Card, Live, useInterval, ErrorBox, PageHead, REASON, RowActions, Seg, Stat, Table, WORK_KIND, date, num, today, useApi, useApp, useModal, won, useUrlState } from '../ui'
+import { Badge, Bar, Card, Dept, Live, useInterval, ErrorBox, PageHead, REASON, RowActions, Seg, Stat, Table, WORK_KIND, date, num, today, useApi, useApp, useModal, won, useUrlState } from '../ui'
 
 // 업무월이 이번 달이면 오늘, 지난 달이면 그 달 말일 기준
 export const asOf = (month) => {
@@ -288,7 +288,7 @@ export default function Dashboard() {
           rows={subs.data}
           empty="이 업무월에 접수된 제출이 없습니다."
           columns={[
-            { key: 'department_code', label: '부서', render: (r) => <b>{r.department_code}</b> },
+            { key: 'department_code', label: '부서', render: (r) => <b><Dept code={r.department_code} /></b> },
             { key: 'v', label: '버전', render: (r) => `v${r.latest.version}` },
             { key: 's', label: '상태', render: (r) => <Badge v={r.latest.status} /> },
             { key: 'rows', label: '인원', num: true, render: (r) => num(r.rows) },

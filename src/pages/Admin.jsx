@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Plus } from 'lucide-react'
 import { api } from '../api'
-import { Badge, Person, Card, PageHead, REASON, ROLE, Stat, Table, dt, num, useApi, useModal, useUrlState } from '../ui'
+import { Badge, Person, Card, PageHead, REASON, ROLE, Stat, Table, dt, num, useApi, useModal, useUrlState, resetDeptNames } from '../ui'
 
 const ROLE_OPTS = Object.entries(ROLE)
 // "P1:D1, P2" ↔ [{project_code, department_code}]
@@ -80,7 +80,7 @@ export function Departments() {
       { name: 'project_code', label: '사업코드', required: true }, { name: 'department_code', label: '부서코드', required: true },
       { name: 'department_name', label: '부서 이름', required: true }, { ...REASON, required: false },
     ],
-    onSubmit: async (v) => { await api.put(`/api/departments/${encodeURIComponent(v.project_code)}/${encodeURIComponent(v.department_code)}`, { name: v.department_name, reason: v.reason || null }); list.reload() },
+    onSubmit: async (v) => { await api.put(`/api/departments/${encodeURIComponent(v.project_code)}/${encodeURIComponent(v.department_code)}`, { name: v.department_name, reason: v.reason || null }); resetDeptNames(); list.reload() },
   })
   return (
     <>
