@@ -81,6 +81,16 @@ const FEATS = [
   [ClipboardCheck, '마감 현황과 독촉, 제출 양식 출력까지 한 곳에서'],
 ]
 
+// 모든 화면 맨 아래 저작권·이용 안내
+function Footer() {
+  return (
+    <footer className="foot">
+      <span>© {new Date().getFullYear()} 행정 구조대. All rights reserved.</span>
+      <span>내부 업무용 시스템 · 개인정보 무단 열람·유출 금지</span>
+    </footer>
+  )
+}
+
 function Login({ onLogin }) {
   const [v, setV] = useState({ username: '', password: '' })
   const [show, setShow] = useState(false)
@@ -135,6 +145,7 @@ function Login({ onLogin }) {
           </div>
           <p className="muted" style={{ fontSize: 13, marginTop: 24 }}>계정이 없거나 잠겼다면 시스템 관리자에게 문의하세요.</p>
         </form>
+        <Footer />
       </div>
     </div>
   )
@@ -196,11 +207,20 @@ function ContextBar() {
 }
 
 // ⌘K / Ctrl+K 로 여는 메뉴 검색
+// 검색어가 없을 때 위에 띄우는 추천 할 일 (마감을 막는 일부터)
+const SUGGEST = [
+  ['/validation', '반영을 막는 검증 오류 해결', '', null, TriangleAlert, '추천'],
+  ['/changes?field=bank_account&confirmed=false', '지급을 막는 계좌 변경 확인', '', null, Wallet, '추천'],
+  ['/payroll?tab=people', '재계산이 필요한 급여 보기', '', null, Calculator, '추천'],
+  ['/submissions', '승인을 기다리는 부서 제출 검토', '', null, Send, '추천'],
+]
+
 function Palette({ items, onClose }) {
   const nav = useNavigate()
   const [q, setQ] = useState('')
   const [i, setI] = useState(0)
-  const list = items.filter(([, label, code, , , g]) => !q || `${label} ${code} ${g}`.toLowerCase().includes(q.toLowerCase()))
+  const hits = items.filter(([, label, code, , , g]) => !q || `${label} ${code} ${g}`.toLowerCase().includes(q.toLowerCase()))
+  const list = q ? hits : [...SUGGEST.filter(([to]) => items.some(([t]) => t === to.split('?')[0])), ...hits]
   const go = (it) => { if (it) { nav(it[0]); onClose() } }
   const key = (e) => {
     if (e.key === 'ArrowDown') { e.preventDefault(); setI((i + 1) % Math.max(list.length, 1)) }
@@ -211,14 +231,14 @@ function Palette({ items, onClose }) {
   return (
     <div className="overlay" onMouseDown={(e) => e.target === e.currentTarget && onClose()}>
       <div className="palette" role="dialog" aria-label="메뉴 검색">
-        <div className="palette-input"><Search size={18} /><input autoFocus placeholder="메뉴 이름이나 기능 코드로 이동 (예: 인건비, FN-05)" value={q} onChange={(e) => { setQ(e.target.value); setI(0) }} onKeyDown={key} /></div>
+        <div className="palette-input"><Search size={18} /><input autoFocus placeholder="메뉴나 할 일로 이동 (예: 인건비, 계좌 변경, FN-05)" value={q} onChange={(e) => { setQ(e.target.value); setI(0) }} onKeyDown={key} /></div>
         <div className="palette-list" role="listbox">
           {!list.length && <div className="empty" style={{ padding: 24 }}>일치하는 메뉴가 없습니다.</div>}
           {list.map((it, n) => {
             const [to, label, code, , I, g] = it
             return (
-              <div key={to} role="option" aria-selected={n === i} className={`palette-item${n === i ? ' on' : ''}`} onMouseEnter={() => setI(n)} onClick={() => go(it)}>
-                <I size={17} /><span>{label}</span><span className="group">{g}</span><small>{code}</small>
+              <div key={to + label} role="option" aria-selected={n === i} className={`palette-item${n === i ? ' on' : ''}`} onMouseEnter={() => setI(n)} onClick={() => go(it)}>
+                <I size={17} /><span>{label}</span><span className={`group${g === '추천' ? ' tip' : ''}`}>{g}</span><small>{code}</small>
               </div>
             )
           })}
@@ -243,8 +263,27 @@ function Shell({ user, logout, setUser }) {
   const items = groups.flatMap(([g, list]) => list.map((it) => [...it, g]))
   const cur = items.find(([to]) => to === loc.pathname) || (loc.pathname === '/notifications' && ['', '알림', '', null, Bell, '내 알림'])
 
+  // 탭 제목에 화면 이름과 안 읽은 알림 수를 보여준다
+  const n = unread?.count || 0
+  useEffect(() => { document.title = `${n ? `(${n > 99 ? '99+' : n}) ` : ''}${cur ? `${cur[1]} · ` : ''}행정 구조대` }, [cur?.[1], n]) // eslint-disable-line react-hooks/exhaustive-deps
+  // 내용을 내리면 상단 바에 그림자를 깐다
+  const [scrolled, setScrolled] = useState(false)
   useEffect(() => {
-    const onKey = (e) => { if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') { e.preventDefault(); setPal((p) => !p) } }
+    const on = () => setScrolled(scrollY > 4)
+    on()
+    addEventListener('scroll', on, { passive: true })
+    return () => removeEventListener('scroll', on)
+  }, [])
+
+  useEffect(() => {
+    const onKey = (e) => {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') { e.preventDefault(); setPal((p) => !p) }
+      // '/'로 표 검색창에 바로 들어간다 (입력 중이면 그대로 둔다)
+      else if (e.key === '/' && !e.metaKey && !e.ctrlKey && !e.target.closest('input, textarea, select, [contenteditable]')) {
+        const s = document.querySelector('.content .table-tools input')
+        if (s) { e.preventDefault(); s.focus(); s.select() }
+      }
+    }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
   }, [])
@@ -266,7 +305,7 @@ function Shell({ user, logout, setUser }) {
   return (
     <div className={`shell${collapsed ? ' collapsed' : ''}`}>
       <aside className="sidebar">
-        <div className="brand"><Logo /><div className="brand-text">행정 구조대<small>통합 행정 시스템</small></div></div>
+        <button type="button" className="brand" onClick={toggle} title={collapsed ? '메뉴 펼치기' : '메뉴 접기'} aria-expanded={!collapsed}><Logo /><span className="brand-text">행정 구조대<small>통합 행정 시스템</small></span></button>
         <nav className="nav" aria-label="주 메뉴">
           {groups.map(([g, list]) => (
             <div key={g}>
@@ -288,14 +327,14 @@ function Shell({ user, logout, setUser }) {
         </div>
       </aside>
       <div className="main">
-        <header className="topbar">
+        <header className={`topbar${scrolled ? ' scrolled' : ''}`}>
           {cur && <div className="crumb">{cur[5]}<ChevronRight size={14} /><b>{cur[1]}</b></div>}
           <div className="spacer" />
           <ContextBar />
           <button className="kbd-btn" onClick={() => setPal(true)}><Search size={15} /><span style={{ flex: 1, textAlign: 'left' }}>메뉴 검색</span><kbd>{mac ? <><Command size={11} />K</> : 'Ctrl K'}</kbd></button>
           <button className="icon-btn" onClick={() => setTour(loc.pathname)} aria-label="이 화면 안내 보기" title="이 화면 안내 보기"><CircleHelp size={19} /></button>
           <NavLink to="/notifications" className="icon-btn" aria-label={`알림${unread?.count ? ` ${unread.count}건` : ''}`}>
-            <Bell size={19} />{unread?.count > 0 && <span className="dot">{unread.count > 99 ? '99+' : unread.count}</span>}
+            <Bell size={19} />{unread?.count > 0 && <span className="dot" key={unread.count}>{unread.count > 99 ? '99+' : unread.count}</span>}
           </NavLink>
         </header>
         <main className="content" key={loc.pathname}>
@@ -307,6 +346,7 @@ function Shell({ user, logout, setUser }) {
           </Routes>
           </PageBoundary>
         </main>
+        <Footer />
       </div>
       {tour && <Tour key={tour} path={tour} onDone={() => setTour(null)} />}
       {intro && <Intro user={user} onDone={() => { sessionStorage.setItem('intro', '1'); setIntro(false) }} />}

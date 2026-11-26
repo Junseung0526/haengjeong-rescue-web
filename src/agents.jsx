@@ -4,9 +4,9 @@ import { Logo } from './ui'
 
 // 투어·인트로·활동 기록에 쓰는 에이전트 이름과 색
 export const AGENTS = [
-  { name: '검증 에이전트', color: '#7c5cff' },
-  { name: '정산 에이전트', color: '#0ca678' },
-  { name: '취합 에이전트', color: '#f76707' },
+  { name: '검증 에이전트', color: '#2a6fdb' },
+  { name: '정산 에이전트', color: '#1d8a4a' },
+  { name: '취합 에이전트', color: '#c8601a' },
 ]
 
 /* ---------- 페이지 투어 ---------- */

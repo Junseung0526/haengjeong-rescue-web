@@ -1,4 +1,4 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react'
+import { createContext, useCallback, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { Link, useSearchParams } from 'react-router-dom'
 import { AlertTriangle, ArrowDown, ArrowUp, ArrowUpDown, CircleAlert, RefreshCw, FileUp, Inbox, Info, Loader2, Paperclip, Search, X } from 'lucide-react'
@@ -207,9 +207,28 @@ export function Bar({ parts }) {
   )
 }
 
+// 선택 표시(밑줄·바탕)가 고른 항목으로 미끄러져 가도록 위치를 잰다
+function useInk(value) {
+  const ref = useRef(null)
+  const [ink, setInk] = useState(null)
+  useLayoutEffect(() => {
+    const on = ref.current?.querySelector(':scope > .on')
+    if (!on) return setInk(null)
+    const update = () => setInk({ x: on.offsetLeft, w: on.offsetWidth })
+    update()
+    const ro = new ResizeObserver(update)
+    ro.observe(on)
+    return () => ro.disconnect()
+  }, [value])
+  const style = ink && { transform: `translateX(${ink.x}px)`, width: ink.w }
+  return [ref, style]
+}
+
 export function Tabs({ tabs, value, onChange }) {
+  const [ref, ink] = useInk(value)
   return (
-    <div className="tabs" role="tablist">
+    <div className={`tabs${ink ? ' inked' : ''}`} role="tablist" ref={ref}>
+      {ink && <i className="ink" style={ink} aria-hidden="true" />}
       {tabs.map(([k, label]) => (
         <button key={k} role="tab" aria-selected={value === k} className={value === k ? 'on' : ''} onClick={() => onChange(k)}>{label}</button>
       ))}
@@ -218,8 +237,10 @@ export function Tabs({ tabs, value, onChange }) {
 }
 
 export function Seg({ options, value, onChange, label }) {
+  const [ref, ink] = useInk(value)
   return (
-    <div className="seg" role="radiogroup" aria-label={label}>
+    <div className={`seg${ink ? ' inked' : ''}`} role="radiogroup" aria-label={label} ref={ref}>
+      {ink && <i className="ink" style={ink} aria-hidden="true" />}
       {options.map(([k, l]) => <button key={k} role="radio" aria-checked={value === k} className={value === k ? 'on' : ''} onClick={() => onChange(k)}>{l}</button>)}
     </div>
   )
@@ -272,7 +293,7 @@ export function Table({ columns, rows, loading, error, onRow, empty = '표시할
     <>
       {showTools && (
         <div className="table-tools">
-          <div className="search"><Search size={15} /><input className="input sm" placeholder="표 안에서 검색" value={q} onChange={(e) => setQ(e.target.value)} aria-label="표 검색" /></div>
+          <div className="search"><Search size={15} /><input className="input sm" placeholder="표 안에서 검색" value={q} onChange={(e) => setQ(e.target.value)} onKeyDown={(e) => { if (e.key === 'Escape') { setQ(''); e.currentTarget.blur() } }} aria-label="표 검색 (단축키 /)" /><kbd className="slash" aria-hidden="true">/</kbd></div>
           {tools}
           <span className="muted">{q ? `${view.length} / ${rows?.length ?? 0}건` : `${rows?.length ?? 0}건`}</span>
         </div>

@@ -71,6 +71,34 @@ npm run dev
 | `npm run preview` | 빌드 결과 미리보기 |
 | `npm run lint` | Oxlint 검사 |
 
+## CI/CD · Vercel 배포
+
+`.github/workflows/ci.yml`이 다음을 자동으로 합니다.
+
+| 언제 | 하는 일 |
+|---|---|
+| PR을 올리거나 고칠 때 | 린트·빌드 검사 → 통과하면 Vercel **미리보기** 배포 (주소는 Actions 실행 요약에 표시) |
+| `main`에 머지될 때 | 린트·빌드 검사 → 통과하면 Vercel **운영** 배포 |
+
+`vercel.json`이 `/api`, `/health`를 백엔드로 넘기고, 나머지 경로는 `index.html`로 돌려줍니다.
+Vercel의 Git 자동 배포는 꺼 두었습니다(`git.deploymentEnabled: false`). 배포는 검사를 통과한 뒤 Actions에서만 일어납니다.
+
+### 처음 한 번 설정
+
+1. Vercel에서 프로젝트를 만듭니다. 로컬에서 `npx vercel link`를 실행하면 `.vercel/project.json`에 `orgId`, `projectId`가 생깁니다 (이 폴더는 커밋하지 않습니다).
+2. Vercel 계정 설정 → Tokens에서 토큰을 만듭니다.
+3. GitHub 저장소 → Settings → Secrets and variables → Actions에 세 값을 등록합니다.
+   - `VERCEL_TOKEN`
+   - `VERCEL_ORG_ID`
+   - `VERCEL_PROJECT_ID`
+
+시크릿이 없으면 검사만 하고 배포 단계는 건너뜁니다.
+
+### 백엔드 주소 바꾸기
+
+지금은 임시 터널(trycloudflare) 주소를 쓰고 있어서, 터널을 다시 열면 주소가 바뀝니다.
+그때는 `vercel.json`의 두 `destination` 주소를 새 주소로 고쳐 PR로 올리면 됩니다.
+
 ## 배포할 때 주의
 
 - 프론트는 API를 상대 경로(`/api`)로 호출하고, 백엔드에는 CORS 설정이 없습니다. 그래서 **정적 호스팅만으로는 동작하지 않습니다.**

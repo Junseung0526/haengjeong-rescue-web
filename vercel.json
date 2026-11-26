@@ -1,0 +1,8 @@
+{
+  "git": { "deploymentEnabled": false },
+  "rewrites": [
+    { "source": "/api/:path*", "destination": "https://flashing-cornell-bit-economies.trycloudflare.com/api/:path*" },
+    { "source": "/health", "destination": "https://flashing-cornell-bit-economies.trycloudflare.com/health" },
+    { "source": "/(.*)", "destination": "/index.html" }
+  ]
+}
