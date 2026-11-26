@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Upload } from 'lucide-react'
 import { api, form } from '../api'
-import { Badge, Card, ErrorBox, Modal, PageHead, REASON, Stat, Table, Tabs, dt, num, useApi, useApp, useModal, won } from '../ui'
+import { Badge, Card, ErrorBox, Modal, PageHead, REASON, Stat, Table, Tabs, dt, num, useApi, useApp, useDeptNames, useModal, won } from '../ui'
 
 export default function Submissions() {
   const { scope, toast } = useApp()
@@ -79,6 +79,7 @@ export const ISSUE_COLS = [
 ]
 
 function SubmissionDetail({ id, onClose, onChanged }) {
+  const depts = useDeptNames()
   const { user } = useApp()
   const [modal, open] = useModal()
   const [tab, setTab] = useState('rows')
@@ -124,7 +125,7 @@ function SubmissionDetail({ id, onClose, onChanged }) {
   })
 
   return (
-    <Modal wide title={sub.data ? `${sub.data.department_code} · ${sub.data.work_month} 제출` : '제출'} onClose={onClose}
+    <Modal wide title={sub.data ? `${depts?.get(sub.data.department_code) ?? sub.data.department_code} · ${sub.data.work_month} 제출` : '제출'} onClose={onClose}
       footer={d && latest && <>
         {status === 'draft' && <button className="btn" onClick={attach}>공문 첨부</button>}
         {status === 'draft' && <button className="btn primary" disabled={d.blocking_issues > 0} title={d.blocking_issues ? '차단 오류를 먼저 해결하세요' : ''}

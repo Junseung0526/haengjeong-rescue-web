@@ -47,7 +47,7 @@ export default function Validation() {
         </div>}
       >
         <Table {...issues} rows={issues.data} empty="오류가 없습니다." emptyHint="이 업무월 자료가 모든 검사를 통과했습니다."
-          columns={[...ISSUE_COLS, { key: 'dept', label: '부서', render: (r) => r.department_code }, {
+          columns={[...ISSUE_COLS, { key: 'department_code', label: '부서' }, {
             key: 'a', label: '', render: (r) => !r.is_resolved && (
               <div className="actions">
                 {r.row_id && r.field && <button className="btn sm" onClick={() => fix(r)}>수정</button>}

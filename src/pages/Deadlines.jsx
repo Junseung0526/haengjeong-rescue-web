@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Plus } from 'lucide-react'
 import { api } from '../api'
-import { Badge, Card, ErrorBox, Modal, PageHead, REASON, Stat, Table, Tabs, dt, useApi, useApp, useModal, useUrlState } from '../ui'
+import { Badge, Card, ErrorBox, Modal, PageHead, REASON, Stat, Table, Tabs, dt, useApi, useApp, useDeptNames, useModal, useUrlState } from '../ui'
 
 const DATES = [
   { name: 'request_date', label: '제출 요청일', type: 'date', required: true },
@@ -52,6 +52,7 @@ export default function Deadlines() {
 }
 
 function Status({ s, onClose }) {
+  const depts = useDeptNames()
   const [modal, open] = useModal()
   const [tab, setTab] = useUrlState('tab', 'status')
   const status = useApi(`/api/deadlines/${s.id}/submission-status`)
@@ -70,7 +71,7 @@ function Status({ s, onClose }) {
     onSubmit: async (v) => { await api.post(`/api/deadlines/${s.id}/submission-targets/confirm`, { ...v, expected_revision: rev }); reload() },
   })
   const adjust = (d) => open({
-    title: `${d.department_code} 대상 조정`,
+    title: `${depts?.get(d.department_code) ?? d.department_code} 대상 조정`,
     initial: { manual_override: d.manual_override || '' },
     fields: [{ name: 'manual_override', label: '조정', type: 'select', options: [['include', '포함'], ['exclude', '제외']], hint: '선택 안 함이면 자동 기준으로 복귀' }, REASON],
     onSubmit: async (v) => { await api.put(`/api/deadlines/${s.id}/submission-targets/${d.department_code}`, { expected_revision: rev, reason: v.reason, manual_override: v.manual_override || null }); reload() },

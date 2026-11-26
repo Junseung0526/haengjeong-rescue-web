@@ -260,28 +260,54 @@ export function Empty({ title = '표시할 내용이 없습니다.', hint, icon:
 /* ---------- 표 ---------- */
 // columns: [{ key, label, render(row), num, sort?: false }]
 // search: 검색창 표시 (행이 많으면 자동), tools: 검색창 옆 추가 요소
+// 부서 코드 → 이름. 한 번만 불러와 모든 표가 같이 쓴다
+// shortcut: 코드만으로 찾으므로 사업이 달라도 코드가 같으면 같은 이름이 나온다. 겹치는 코드가 생기면 사업 코드까지 키로 쓸 것
+let deptReq = null
+export const resetDeptNames = () => { deptReq = null }
+export function useDeptNames() {
+  const [map, setMap] = useState(null)
+  useEffect(() => {
+    deptReq ||= api.get('/api/departments')
+      .then((list) => new Map((list || []).map((d) => [d.department_code, d.department_name])))
+      .catch(() => { deptReq = null; return new Map() })
+    let live = true
+    deptReq.then((m) => live && setMap(m))
+    return () => { live = false }
+  }, [])
+  return map
+}
+
+export function Dept({ code }) {
+  const name = useDeptNames()?.get(code)
+  if (!code) return '-'
+  return name ? <span title={code}>{name}</span> : code
+}
+
 export function Table({ columns, rows, loading, error, onRow, empty = '표시할 내용이 없습니다.', emptyHint, emptyIcon, search, tools }) {
   const [q, setQ] = useUrlState('q')
   const [sort, setSort] = useState(null) // [key, dir]
   const showTools = search ?? (rows?.length > 8 || !!tools)
+  const depts = useDeptNames()
 
   const view = useMemo(() => {
     let r = rows || []
     if (q) {
       const needle = q.toLowerCase()
-      r = r.filter((row) => columns.some((c) => c.key && String(row[c.key] ?? '').toLowerCase().includes(needle)))
+      r = r.filter((row) => columns.some((c) => c.key && `${row[c.key] ?? ''} ${c.key === 'department_code' ? depts?.get(row[c.key]) ?? '' : ''}`.toLowerCase().includes(needle)))
     }
     if (sort) {
       const [k, d] = sort
       r = [...r].sort((a, b) => {
-        const x = a[k], y = b[k]
+        // 부서는 코드가 아니라 화면에 보이는 이름 순으로
+        const name = (v) => (k === 'department_code' ? depts?.get(v) ?? v : v)
+        const x = name(a[k]), y = name(b[k])
         const nx = Number(x), ny = Number(y)
         const c = x !== null && y !== null && x !== '' && y !== '' && !isNaN(nx) && !isNaN(ny) ? nx - ny : String(x ?? '').localeCompare(String(y ?? ''), 'ko')
         return d * c
       })
     }
     return r
-  }, [rows, q, sort, columns])
+  }, [rows, q, sort, columns, depts])
 
   if (error) return <div className="card-body"><ErrorBox error={error} /></div>
   const toggle = (c) => {
@@ -327,7 +353,7 @@ export function Table({ columns, rows, loading, error, onRow, empty = '표시할
                 <tr key={r.id || r.participation_id || i} style={{ '--i': i }} className={onRow ? 'click' : ''} onClick={onRow ? () => onRow(r) : undefined}
                   tabIndex={onRow ? 0 : undefined} onKeyDown={onRow ? (e) => e.key === 'Enter' && onRow(r) : undefined}>
                   {columns.map((c) => (
-                    <td key={c.key || c.label} className={c.num ? 'num' : ''}>{c.render ? c.render(r) : (r[c.key] ?? '-')}</td>
+                    <td key={c.key || c.label} className={c.num ? 'num' : ''}>{c.render ? c.render(r) : c.key === 'department_code' ? <Dept code={r[c.key]} /> : (r[c.key] ?? '-')}</td>
                   ))}
                 </tr>
               ))}
