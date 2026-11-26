@@ -73,26 +73,16 @@ npm run dev
 
 ## CI/CD · Vercel 배포
 
-`.github/workflows/ci.yml`이 다음을 자동으로 합니다.
-
 | 언제 | 하는 일 |
 |---|---|
-| PR을 올리거나 고칠 때 | 린트·빌드 검사 → 통과하면 Vercel **미리보기** 배포 (주소는 Actions 실행 요약에 표시) |
-| `main`에 머지될 때 | 린트·빌드 검사 → 통과하면 Vercel **운영** 배포 |
+| PR을 올리거나 고칠 때 | GitHub Actions(`.github/workflows/ci.yml`)가 린트·빌드 검사, Vercel이 **미리보기** 배포 (PR에 주소 댓글) |
+| `main`에 머지될 때 | 같은 검사 + Vercel **운영** 배포 |
 
+배포는 Vercel의 GitHub 연동이 맡아서 별도 토큰·시크릿이 필요 없습니다.
 `vercel.json`이 `/api`, `/health`를 백엔드로 넘기고, 나머지 경로는 `index.html`로 돌려줍니다.
-Vercel의 Git 자동 배포는 꺼 두었습니다(`git.deploymentEnabled: false`). 배포는 검사를 통과한 뒤 Actions에서만 일어납니다.
 
-### 처음 한 번 설정
-
-1. Vercel에서 프로젝트를 만듭니다. 로컬에서 `npx vercel link`를 실행하면 `.vercel/project.json`에 `orgId`, `projectId`가 생깁니다 (이 폴더는 커밋하지 않습니다).
-2. Vercel 계정 설정 → Tokens에서 토큰을 만듭니다.
-3. GitHub 저장소 → Settings → Secrets and variables → Actions에 세 값을 등록합니다.
-   - `VERCEL_TOKEN`
-   - `VERCEL_ORG_ID`
-   - `VERCEL_PROJECT_ID`
-
-시크릿이 없으면 검사만 하고 배포 단계는 건너뜁니다.
+> Actions 검사와 Vercel 배포는 따로 돌기 때문에, 검사가 실패해도 배포는 진행됩니다. 빨간 X가 뜬 PR은 머지하지 마세요.
+> 막으려면 GitHub Settings → Branches에서 `main`에 "Require status checks to pass" 규칙을 거세요.
 
 ### 백엔드 주소 바꾸기
 
