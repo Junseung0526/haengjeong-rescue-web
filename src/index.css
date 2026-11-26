@@ -552,8 +552,24 @@ input, textarea { caret-color: var(--primary); }
 input, select, textarea, button { accent-color: var(--primary); }
 
 /* 스크롤: 얇게, 끝에 닿아도 바깥 화면이 따라 밀리지 않게 */
-* { scrollbar-width: thin; scrollbar-color: #c9d1da transparent; }
-.sidebar { scrollbar-color: #2b3b57 transparent; }
+/* 스크롤바: 화살표 없는 얇은 알약 모양. 안쪽 스크롤 영역은 마우스를 올렸을 때만 보인다
+   (색은 --thumb 변수로 넘긴다. 부모 :hover로 thumb을 직접 바꾸면 크롬이 다시 그리지 않는 경우가 있다) */
+:root { --thumb: rgba(15, 28, 51, .2); --thumb-on: rgba(15, 28, 51, .4); }
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track, ::-webkit-scrollbar-corner { background: transparent; }
+::-webkit-scrollbar-button { display: none; }
+::-webkit-scrollbar-thumb { background-color: var(--thumb); border: 3px solid transparent; background-clip: padding-box; border-radius: 999px; min-height: 40px; }
+::-webkit-scrollbar-thumb:hover, ::-webkit-scrollbar-thumb:active { background-color: var(--thumb-on); border-width: 2px; }
+:is(.table-wrap, .modal-body, .palette-list, .drawer, .sidebar) { --thumb: transparent; }
+:is(.table-wrap, .modal-body, .palette-list, .drawer):is(:hover, :focus-within) { --thumb: rgba(15, 28, 51, .2); }
+.sidebar { --thumb-on: rgba(255, 255, 255, .32); }
+.sidebar:is(:hover, :focus-within) { --thumb: rgba(255, 255, 255, .16); }
+.sidebar::-webkit-scrollbar { width: 8px; }
+/* ::-webkit-scrollbar를 모르는 브라우저(Firefox)는 표준 속성으로 */
+@supports not selector(::-webkit-scrollbar) {
+  * { scrollbar-width: thin; scrollbar-color: rgba(15, 28, 51, .24) transparent; }
+  .sidebar { scrollbar-color: rgba(255, 255, 255, .18) transparent; }
+}
 .sidebar ::selection { background: #2f4f86; color: #fff; }
 .modal-body, .table-wrap, .palette-list, .sidebar, .drawer { overscroll-behavior: contain; }
 
