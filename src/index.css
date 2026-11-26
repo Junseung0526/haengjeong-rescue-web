@@ -427,9 +427,8 @@ tbody tr { animation: rowIn .35s var(--ease) both; animation-delay: calc(min(var
 @keyframes slideIn { from { opacity: 0; transform: translateX(-24px); } }
 .intro-agent i { width: 10px; height: 10px; border-radius: 50%; background: var(--agent); }
 .intro-wait, .intro-ok { margin-left: auto; font-size: 12.5px; font-weight: 500; }
-.intro-wait { color: #8796b3; animation: hideAfter .6s steps(1) both; animation-duration: .6s; }
-.intro-ok { position: absolute; right: 14px; color: var(--agent); opacity: 0; animation: fadeIn .3s var(--ease) both; }
-@keyframes hideAfter { 0%, 99% { opacity: 1; } 100% { opacity: 0; } }
+.intro-wait { color: #8796b3; }
+.intro-ok { color: var(--agent); animation: fadeIn .3s var(--ease) both; }
 @keyframes fadeIn { to { opacity: 1; } }
 .intro-skip { color: #5f6e8c; font-size: 12px; margin-top: 18px; animation: fadeUp .6s 1.8s both; }
 
