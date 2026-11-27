@@ -107,6 +107,23 @@
 
 메뉴는 로그인한 사용자의 역할에 따라 보이는 항목이 달라집니다.
 
+## 구조
+
+```mermaid
+flowchart LR
+  U["담당자 브라우저"] --> V["Vercel<br/>정적 화면 (React SPA)"]
+  V -- "/api · /health 프록시" --> B["백엔드 API<br/>(FastAPI)"]
+  B --> D[("DB")]
+  V -. "그 밖의 경로는 index.html" .-> U
+```
+
+월 마감은 아래 순서로 흘러가고, 대시보드가 지금 어느 단계인지 보여 줍니다.
+
+```mermaid
+flowchart LR
+  A["부서 제출<br/>엑셀 취합"] --> B["검증<br/>오류 해소"] --> C["인건비 계산"] --> D["4대보험 귀속"] --> E["지급·제출<br/>양식 출력"]
+```
+
 ## 기술 스택
 
 - React 19, React Router 7, Vite 8
