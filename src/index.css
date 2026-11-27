@@ -808,3 +808,8 @@ th { box-shadow: 0 1px 0 var(--border); }
 @keyframes lantern-drift { 0% { opacity: 0; transform: translateX(0) scale(.5); } 8% { opacity: 1; transform: translateX(-10px) scale(1); } 78% { opacity: 1; } 100% { opacity: 0; transform: translateX(-210px) scale(.9); } }
 @keyframes lantern-bob { from { transform: translateY(-1.5px) rotate(-3deg); } to { transform: translateY(1.5px) rotate(3deg); } }
 .lanterns i { scale: var(--z, 1); }
+
+/* 앱 안: 로그인 왼쪽과 같은 은은한 빛 (한쪽은 진주 파랑, 반대쪽은 유등빛 주황) */
+.sidebar { background: radial-gradient(420px 320px at 0% 100%, rgba(20, 80, 163, .32), transparent 70%), radial-gradient(320px 240px at 100% 100%, rgba(243, 154, 30, .06), transparent 70%), #0f1c33; }
+.card.close { --close-glow: radial-gradient(760px 320px at 100% 0%, rgba(20, 80, 163, .5), transparent 62%), radial-gradient(520px 260px at 0% 100%, rgba(243, 154, 30, .09), transparent 62%); background-image: var(--close-glow); }
+.card.close:hover { background-image: radial-gradient(420px circle at var(--mx, 50%) var(--my, 50%), rgba(91, 155, 255, .16), transparent 45%), var(--close-glow); }
