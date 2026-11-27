@@ -111,7 +111,7 @@ function JinjuScape() {
         {[158, 170].map((y) => <path key={y} d={`M${436} ${y} L ${684} ${y}`} />)}
         {Array.from({ length: 12 }, (_, k) => <path key={k} d={`M${452 + k * 20 + (k % 2) * 10} ${146 + (k % 3) * 12} l 0 12`} />)}
       </g>
-      {[192, 204, 216, 228].map((y, k) => <path key={y} className="wave" d={wave(y, 3 - k * 0.4, k * 20)} />)}
+      {[192, 204, 216, 228].map((y, k) => <path key={y} className="wave" style={{ '--t': `${11 - k * 1.6}s` }} d={wave(y, 3 - k * 0.4, k * 20)} />)}
     </svg>
   )
 }
