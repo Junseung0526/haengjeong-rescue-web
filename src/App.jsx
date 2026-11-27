@@ -107,10 +107,9 @@ function JinjuScape() {
         <path className="fine" d="M424 121 Q 456 118 474 110 L 646 110 Q 664 118 696 121" />
         <g clipPath="url(#roof-lo)">{Array.from({ length: 15 }, (_, k) => { const x = 504 + k * 8; return <path key={k} className="fine" d={`M${x} 78 L ${560 + (x - 560) * 1.62} 110`} /> })}</g>
         {Array.from({ length: 29 }, (_, k) => <path key={k} className="fine" d={`M${476 + k * 6} 110 l 0 3`} />)}
-        {/* 위 지붕(팔작): 용마루 양끝 취두, 기와골, 합각 */}
+        {/* 위 지붕(팔작): 용마루 양끝 취두, 기와골 */}
         <path d="M494 78 L 512 58 L 608 58 L 626 78" />
         <path d="M510 58 Q 560 53 610 58 M510 58 q -4 0 -6 -6 M610 58 q 4 0 6 -6" />
-        <path className="fine" d="M512 58 L 524 68 L 512 78 M608 58 L 596 68 L 608 78" />
         <g clipPath="url(#roof-up)">{Array.from({ length: 11 }, (_, k) => { const x = 520 + k * 8; return <path key={k} className="fine" d={`M${x} 58 L ${560 + (x - 560) * 1.25} 78`} /> })}</g>
         {/* 공포대와 기둥, 누마루 난간 */}
         <path d="M466 116 L 654 116" />
@@ -133,7 +132,9 @@ function JinjuScape() {
   )
 }
 
-// 남강유등축제처럼, 마우스가 강 위를 지나가면 유등을 띄운다. 물결 방향으로 흘러가다 사라지고, 한 번에 20개까지만
+// 남강유등축제처럼 강 위에 유등이 늘 몇 개 떠서 흘러가고, 마우스가 강 위를 지나가면 더 띄운다
+const LANTERN_AMBIENT = 12 // 가만히 있을 때 떠 있는 개수
+const LANTERN_MAX = 26
 function Lanterns() {
   const box = useRef(null)
   const [list, setList] = useState([])
@@ -142,26 +143,35 @@ function Lanterns() {
     if (!hero || matchMedia('(prefers-reduced-motion: reduce)').matches) return
     let id = 0
     let last = { t: 0, x: -999 }
-    const timers = new Set()
-    const move = (e) => {
+    // 물결(viewBox y 192~228) 위 화면 좌표. 그림이 안 보이면(낮은 화면) null
+    const water = () => {
       const scape = hero.querySelector('.auth-scape')
-      if (!scape || !scape.getClientRects().length) return
+      if (!scape || !scape.getClientRects().length) return null
       const s = scape.getBoundingClientRect()
       const h = hero.getBoundingClientRect()
-      const k = Math.min(s.width / 800, s.height / 230) // 그림 배율 (viewBox 800×230, 아래 맞춤)
-      if (e.clientY < s.bottom - k * 80 || e.clientY > s.bottom) return
+      return { s, h, k: Math.min(s.width / 800, s.height / 230) }
+    }
+    // x는 hero 기준. delay(초, 음수)를 주면 이미 흘러가던 중인 유등으로 시작한다
+    const add = (w, x, { cap = LANTERN_MAX, delay = 0 } = {}) => {
+      const t = 9 + Math.random() * 5
+      const l = { id: ++id, x, y: w.s.bottom - w.h.top - w.k * (8 + Math.random() * 28), z: 0.75 + Math.random() * 0.45, t, d: delay }
+      setList((a) => (a.length >= cap ? (cap === LANTERN_MAX ? [...a.slice(1), l] : a) : [...a, l]))
+    }
+    const ambient = (delay) => { const w = water(); if (w) add(w, Math.random() * (w.h.width + 200), { cap: LANTERN_AMBIENT, delay }) }
+    for (let n = 0; n < LANTERN_AMBIENT * 0.7; n++) ambient(-Math.random() * 8)
+    const every = setInterval(() => ambient(0), 950)
+    const move = (e) => {
+      const w = water()
+      if (!w || e.clientY < w.s.bottom - w.k * 80 || e.clientY > w.s.bottom) return
       const now = performance.now()
       if (now - last.t < 140 || Math.abs(e.clientX - last.x) < 22) return
       last = { t: now, x: e.clientX }
-      const l = { id: ++id, x: e.clientX - h.left + (Math.random() - 0.5) * 16, y: s.bottom - h.top - k * (8 + Math.random() * 28), z: 0.75 + Math.random() * 0.45, t: 9 + Math.random() * 5 } // 물결(y 192~228) 위에만, 크기·속도는 조금씩 다르게
-      setList((a) => [...a.slice(-19), l])
-      const t = setTimeout(() => { timers.delete(t); setList((a) => a.filter((v) => v.id !== l.id)) }, 14500)
-      timers.add(t)
+      add(w, e.clientX - w.h.left + (Math.random() - 0.5) * 16)
     }
     hero.addEventListener('pointermove', move)
-    return () => { hero.removeEventListener('pointermove', move); timers.forEach(clearTimeout) }
+    return () => { hero.removeEventListener('pointermove', move); clearInterval(every); setList([]) }
   }, [])
-  return <div ref={box} className="lanterns" aria-hidden="true">{list.map((l) => <span key={l.id} style={{ left: l.x, top: l.y, '--z': l.z, animationDuration: `${l.t}s` }}><i /></span>)}</div>
+  return <div ref={box} className="lanterns" aria-hidden="true">{list.map((l) => <span key={l.id} onAnimationEnd={(e) => { if (e.target === e.currentTarget) setList((a) => a.filter((v) => v.id !== l.id)) }} style={{ left: l.x, top: l.y, '--z': l.z, animationDuration: `${l.t}s`, animationDelay: `${l.d}s` }}><i /></span>)}</div>
 }
 
 // 로그인 화면 왼쪽: 월 마감 5단계를 차례로 보여 주고, 마우스를 올리거나 누르면 그 단계에 멈춘다
