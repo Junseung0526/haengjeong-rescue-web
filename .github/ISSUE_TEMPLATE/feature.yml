@@ -1,0 +1,11 @@
+name: 기능 제안
+description: 업무에 필요한 기능이나 개선 아이디어
+labels: [enhancement]
+body:
+  - type: textarea
+    id: need
+    attributes: { label: 어떤 업무에서 불편한가요 }
+    validations: { required: true }
+  - type: textarea
+    id: idea
+    attributes: { label: 어떻게 바뀌면 좋을까요 }
