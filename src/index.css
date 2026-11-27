@@ -755,3 +755,38 @@ th { box-shadow: 0 1px 0 var(--border); }
 .org-mark:focus-visible { outline: 2px solid var(--primary); outline-offset: 4px; }
 .sidebar::before { content: ''; display: block; flex-shrink: 0; height: 3px; background: linear-gradient(90deg, #1450a3 0 25%, #e8382c 25% 50%, #f39a1e 50% 75%, #4caf3c 75%); }
 @media (max-width: 640px) { .org-mark { display: none; } }
+
+/* 진주시 디테일: 촉석루·남강 배경, 시청 주소, 4색 표식 */
+.auth-hero { grid-template-rows: auto 1fr auto; }
+.auth-scape { position: absolute !important; left: 0; right: 0; bottom: 0; width: 100% !important; max-width: none !important; height: clamp(150px, 26vh, 260px); margin: 0 !important; z-index: 0 !important; pointer-events: none; fill: none; stroke: rgba(170, 200, 255, .13); stroke-width: 1.3; stroke-linecap: round; stroke-linejoin: round; }
+.auth-scape .pavilion { stroke: rgba(190, 215, 255, .2); }
+.auth-scape .wave { stroke: rgba(127, 176, 255, .16); animation: river 14s linear infinite; }
+.auth-scape .wave:nth-of-type(2n) { animation-duration: 19s; animation-direction: reverse; }
+@keyframes river { to { transform: translateX(-80px); } }
+.auth-hero .auth-city { margin: 0; font-size: 12.5px; color: #6f84aa; letter-spacing: -0.01em; }
+.city-tag { display: inline-flex; align-items: center; gap: 8px; margin: 0; font-size: 12.5px; font-weight: 600; letter-spacing: .02em; color: #9fb2d3; }
+.city-tag::before { content: ''; width: 18px; height: 3px; border-radius: 2px; background: linear-gradient(90deg, #1450a3 0 25%, #e8382c 25% 50%, #f39a1e 50% 75%, #4caf3c 75%); }
+.intro-center > .city-tag { animation: fadeUp .6s .2s var(--ease) both; }
+.privacy-col > .city-tag { margin-top: 18px; color: #7f8ea8; }
+@media (prefers-reduced-motion: reduce) { .auth-scape .wave { animation: none; } }
+
+/* 왼쪽 위 로고를 본문과 한 덩어리로: 흰 타일 위 참진주 로고 */
+.auth-hero { grid-template-rows: 1fr auto; }
+.auth-hero-main > .auth-brand { display: flex; align-items: center; gap: 14px; margin-bottom: clamp(8px, 2vh, 20px); }
+.auth-brand .tile { display: grid; place-items: center; width: 64px; height: 64px; border-radius: 16px; background: #fff; box-shadow: 0 6px 20px rgba(0, 0, 0, .25), inset 0 -2px 0 rgba(0, 0, 0, .06); flex-shrink: 0; }
+.auth-brand .tile img { width: 50px; height: auto; }
+.auth-brand b { display: block; font-size: 19px; font-weight: 700; color: #fff; letter-spacing: -0.02em; }
+.auth-brand small { display: block; margin-top: 2px; font-size: 13px; color: #8fa3c7; }
+/* 왼쪽에 로고가 보일 때는 오른쪽 로고를 빼고 슬로건만 (한 화면에 로고 두 번 안 나오게) */
+@media (min-width: calc(1000px + 1px)) { .auth-org img, .auth-org .sep { display: none; } .auth-org { padding-bottom: 16px; margin-bottom: 28px; } }
+/* 낮은 화면: 왼쪽 카드가 잘리지 않게 덜어 낸다 */
+.auth-hero { overflow: hidden; }
+.auth-hero .auth-city { position: relative; z-index: 1; text-shadow: 0 1px 8px #0a1b3d; }
+@media (max-height: 860px) { .auth-todo, .auth-scape { display: none; } .auth-hero-main > p { display: none; } .auth-agent { min-height: 0; } }
+@media (max-height: 700px) { .auth-steps { display: none; } }
+.auth-scape { height: clamp(110px, 18vh, 200px); }
+.auth-steps { background: rgba(10, 27, 61, .55); backdrop-filter: blur(4px); position: relative; z-index: 1; }
+@media (max-width: 1000px) { .auth-hero { display: none; } .auth-form .foot { padding-left: 32px; } }
+.auth-scape { overflow: visible; }
+.auth-org .slogan-img { display: block; height: clamp(22px, 1.3vw, 26px); width: auto; }
+.auth-scape { height: clamp(220px, 34vh, 400px); }

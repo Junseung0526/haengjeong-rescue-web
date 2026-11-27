@@ -86,6 +86,35 @@ const STEPS = [
   ['출력', '지급·제출 양식', '지급 명세와 기관 제출 양식을 바로 내려받을 수 있게 만듭니다.', ['지급 명세서 만들기', '기관 제출 양식 만들기', '담당자 확인 요청']],
 ]
 const STEP_MS = 3600
+const CITY_HALL = '52789 경상남도 진주시 동진로 155 (상대동)'
+
+// 로그인 화면 배경: 남강 물결 위 촉석루를 선으로 그린 진주 풍경 (장식용)
+function JinjuScape() {
+  // 물결은 그림 밖까지 길게 그려 넓은 화면·흐르는 움직임에도 끝이 보이지 않게 한다
+  const wave = (y, a, o = 0) => `M${-480 - o} ${y}` + Array.from({ length: 24 }, (_, k) => ` q 40 ${k % 2 ? a : -a} 80 0`).join('')
+  return (
+    <svg className="auth-scape" viewBox="0 0 800 230" preserveAspectRatio="xMidYMax meet" aria-hidden="true">
+      <path d="M-400 140 Q -200 116 0 150 Q 90 108 190 132 T 380 128 Q 430 120 460 134" />
+      <path d="M770 136 Q 820 112 900 122 T 1200 128" />
+      <g className="pavilion" transform="translate(80 0)">
+        <path d="M418 118 Q 452 114 470 104 L 506 78 L 614 78 L 650 104 Q 668 114 702 118" />
+        <path d="M418 118 l -6 -5 M702 118 l 6 -5" />
+        <path d="M494 78 L 512 58 L 608 58 L 626 78" />
+        <path d="M512 58 Q 560 54 608 58 M512 58 l -4 -4 M608 58 l 4 -4" />
+        <path d="M466 116 L 654 116" />
+        {Array.from({ length: 9 }, (_, k) => <path key={k} d={`M${480 + k * 20} 116 L ${480 + k * 20} 146`} />)}
+        <path d="M470 132 L 650 132" />
+        <path d="M456 146 L 664 146" />
+      </g>
+      <g className="wall" transform="translate(80 0)">
+        <path d="M440 146 L 432 182 L 688 182 L 680 146" />
+        {[158, 170].map((y) => <path key={y} d={`M${436} ${y} L ${684} ${y}`} />)}
+        {Array.from({ length: 12 }, (_, k) => <path key={k} d={`M${452 + k * 20 + (k % 2) * 10} ${146 + (k % 3) * 12} l 0 12`} />)}
+      </g>
+      {[192, 204, 216, 228].map((y, k) => <path key={y} className="wave" d={wave(y, 3 - k * 0.4, k * 20)} />)}
+    </svg>
+  )
+}
 
 // 로그인 화면 왼쪽: 월 마감 5단계를 차례로 보여 주고, 마우스를 올리거나 누르면 그 단계에 멈춘다
 function AuthSteps() {
@@ -161,6 +190,7 @@ function Privacy({ user, lock, onBack }) {
         <span className="privacy-pill"><EyeOff size={14} />{lock.idle ? `${IDLE_MIN}분 동안 작업이 없어 화면을 가렸습니다` : '자리 비움'} · {mins < 1 ? '방금' : `${mins}분 전부터`}</span>
         <button className="btn primary privacy-back" onClick={onBack}>업무로 돌아가기</button>
         <p className="privacy-hint">개인정보 보호를 위해 내용을 가렸습니다. 돌아가면 보던 화면 그대로 이어집니다.</p>
+        <p className="city-tag">진주시 · 행정 구조대</p>
       </div>
     </div>,
     document.body,
@@ -207,20 +237,22 @@ function Login({ onLogin }) {
       <div className="auth-notice"><ShieldCheck size={14} />진주시 내부 행정업무 시스템 · 인가된 담당자만 이용할 수 있습니다</div>
       <div className="auth-light" aria-hidden="true" />
       <aside className="auth-hero">
-        <div className="brand" style={{ padding: 0 }}><Logo />행정 구조대</div>
         <div className="auth-hero-main">
+          <div className="auth-brand"><span className="tile"><img src="/jinju-logo.png" alt="진주시" width="72" height="53" /></span><div><b>행정 구조대</b><small>진주시 통합 행정 시스템</small></div></div>
           <div className="auth-eyebrow">AI 에이전트와 함께하는 진주시 인건비 정산</div>
           <h2>흩어진 행정 자료를<br />한 화면에서 검증하고 마감합니다.</h2>
           <p>참여자 관리부터 인건비 계산, 4대보험 귀속, 제출 양식 출력까지 월 마감 전 과정을 에이전트가 함께 처리합니다.</p>
           <AuthSteps />
         </div>
+        <p className="auth-city">진주시청 · {CITY_HALL}</p>
+        <JinjuScape />
       </aside>
       <div className="auth-form">
         <form onSubmit={submit}>
           <div className="auth-org">
             <img src="/jinju-logo.png" alt="참진주 진주시" width="72" height="53" />
             <span className="sep" aria-hidden="true" />
-            <div className="slogan" aria-label="부강한 진주 행복한 시민"><span className="r">부강한 진주</span> <span className="b">행복한 시민</span></div>
+            <img className="slogan-img" src="/jinju-slogan.png" alt="부강한 진주 행복한 시민" width="218" height="28" />
           </div>
           <h1>행정 구조대 로그인</h1>
           <p>진주시 업무 담당자 전용입니다.<br />발급받은 계정으로 로그인하세요.</p>
@@ -380,7 +412,7 @@ function Shell({ user, logout, setUser }) {
 
   // 탭 제목에 화면 이름과 안 읽은 알림 수를 보여준다
   const n = unread?.count || 0
-  useEffect(() => { document.title = lock ? '자리 비움 · 행정 구조대' : `${n ? `(${n > 99 ? '99+' : n}) ` : ''}${cur ? `${cur[1]} · ` : ''}행정 구조대` }, [cur?.[1], n, !lock]) // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { document.title = lock ? '자리 비움 · 행정 구조대' : `${n ? `(${n > 99 ? '99+' : n}) ` : ''}${cur ? `${cur[1]} · ` : ''}행정 구조대 · 진주시` }, [cur?.[1], n, !lock]) // eslint-disable-line react-hooks/exhaustive-deps
   // 내용을 내리면 상단 바에 그림자를 깐다
   const [scrolled, setScrolled] = useState(false)
   useEffect(() => {

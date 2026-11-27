@@ -148,6 +148,7 @@ export function Intro({ user, onDone }) {
     <div className={`intro${out ? ' out' : ''}`} onClick={skip} role="status" aria-label="시스템 준비 중">
       <div className="intro-center">
         <div className="intro-ring"><Logo className="intro-mark" /></div>
+        <p className="city-tag">진주시</p>
         <h1 className="intro-title">{[...title].map((c, k) => <span key={k} style={{ animationDelay: `${0.35 + k * 0.06}s` }}>{c === ' ' ? ' ' : c}</span>)}</h1>
         <p className="intro-hello">{user.name}님, 오늘 업무를 함께할 에이전트를 준비했어요</p>
         <div className="intro-agents">
