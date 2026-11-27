@@ -305,7 +305,12 @@ export function Dept({ code }) {
 }
 
 export function Table({ columns, rows, loading, error, onRow, empty = '표시할 내용이 없습니다.', emptyHint, emptyIcon, search, tools }) {
-  const [q, setQ] = useUrlState('q')
+  const [urlQ, setUrlQ] = useUrlState('q')
+  // 입력값은 컴포넌트가 들고 주소에는 따라 적기만 한다. 주소 값을 바로 입력칸에 묶으면 한 박자 늦게 다시 그려져 한글 조합이 깨진다
+  const [q, setText] = useState(urlQ)
+  const pushed = useRef(urlQ)
+  useEffect(() => { if (urlQ !== pushed.current) { pushed.current = urlQ; setText(urlQ) } }, [urlQ]) // 탭 전환 등 밖에서 바뀐 경우만 반영
+  const setQ = (v) => { setText(v); pushed.current = v; setUrlQ(v) }
   const [sort, setSort] = useState(null) // [key, dir]
   const showTools = search ?? (rows?.length > 8 || !!tools)
   const depts = useDeptNames()
