@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom'
 import { BrowserRouter, Navigate, NavLink, Route, Routes, useLocation, useNavigate } from 'react-router-dom'
 import {
   Bell, Building2, CircleHelp, CalendarCheck, CalendarClock, Calculator, CheckCircle2, ChevronDown, ChevronRight, ClipboardCheck, Command, Eye, EyeOff,
-  FileDown, FileSpreadsheet, GitCompare, KeyRound, LayoutDashboard, Loader2, LogOut, PanelLeftClose, PanelLeftOpen, ScanLine,
+  FileDown, FileSpreadsheet, GitCompare, KeyRound, LayoutDashboard, Loader2, LogOut, PanelLeftClose, PanelLeftOpen, ScanLine, Sparkles,
   ScrollText, Search, Send, ShieldAlert, ShieldCheck, Trash2, TriangleAlert, Users as UsersIcon, UserCog, Wallet, XCircle,
 } from 'lucide-react'
 import { api, getToken, setToken } from './api'
@@ -133,7 +133,7 @@ function Footer() {
   return (
     <footer className="foot">
       <span>© {new Date().getFullYear()} 행정 구조대. All rights reserved.</span>
-      <span>내부 업무용 시스템 · 개인정보 무단 열람·유출 금지</span>
+      <span>진주시 협약 과제 · 내부 업무용 시스템 · 개인정보 무단 열람·유출 금지</span>
     </footer>
   )
 }
@@ -165,10 +165,12 @@ function Login({ onLogin }) {
   }
   return (
     <div className="auth" onPointerMove={follow}>
+      <div className="auth-notice"><ShieldCheck size={14} />진주시 내부 행정업무 시스템 · 인가된 담당자만 이용할 수 있습니다</div>
       <div className="auth-light" aria-hidden="true" />
       <aside className="auth-hero">
         <div>
           <div className="brand" style={{ padding: 0 }}><Logo />행정 구조대</div>
+          <div className="auth-eyebrow"><Sparkles size={14} />AI 에이전트와 함께하는 진주시 인건비 정산</div>
           <h2>흩어진 행정 자료를<br />한 화면에서 검증하고 마감합니다.</h2>
           <p>참여자 관리부터 인건비 계산, 4대보험 귀속, 제출 양식 출력까지 사업 행정 전 과정을 지원합니다.</p>
         </div>
@@ -176,9 +178,13 @@ function Login({ onLogin }) {
       </aside>
       <div className="auth-form">
         <form onSubmit={submit}>
-          <div className="slogan" aria-label="부강한 진주 행복한 시민"><span className="r">부강한 진주</span> <span className="b">행복한 시민</span></div>
-          <h1>로그인</h1>
-          <p>발급받은 계정으로 로그인하세요.</p>
+          <div className="auth-org">
+            <img src="/jinju-logo.png" alt="참진주 진주시" width="72" height="53" />
+            <span className="sep" aria-hidden="true" />
+            <div className="slogan" aria-label="부강한 진주 행복한 시민"><span className="r">부강한 진주</span> <span className="b">행복한 시민</span></div>
+          </div>
+          <h1>행정 구조대 로그인</h1>
+          <p>진주시 업무 담당자 전용입니다.<br />발급받은 계정으로 로그인하세요.</p>
           <ErrorBox error={error} />
           <div className="form">
             <label className="field"><span>아이디</span><input className="input" autoFocus autoComplete="username" required value={v.username} onChange={(e) => setV({ ...v, username: e.target.value })} /></label>
@@ -190,7 +196,8 @@ function Login({ onLogin }) {
             </label>
             <button className="btn primary" style={{ height: 48, marginTop: 8 }} disabled={busy}>{busy && <Loader2 size={16} className="spin" />}{busy ? '로그인 중…' : '로그인'}</button>
           </div>
-          <p className="muted" style={{ fontSize: 13, marginTop: 24 }}>계정이 없거나 잠겼다면 시스템 관리자에게 문의하세요.</p>
+          <div className="auth-secure"><ShieldAlert size={16} /><p>이 시스템은 인가된 진주시 업무 담당자만 사용할 수 있습니다. 모든 접속·열람 기록이 저장되며, 개인정보를 무단으로 열람하거나 유출하면 관계 법령에 따라 처벌받을 수 있습니다.</p></div>
+          <p className="muted" style={{ fontSize: 13, marginTop: 16 }}>계정이 없거나 잠겼다면 시스템 관리자에게 문의하세요.</p>
         </form>
         <Footer />
       </div>
