@@ -302,9 +302,6 @@ tr:hover .row-actions { opacity: 1; }
 .auth-hero > * { width: 100%; max-width: 560px; margin-left: auto; margin-right: clamp(0px, 4vw, 80px); }
 .auth-hero h2 { font-size: clamp(30px, 2.3vw, 44px); line-height: 1.3; letter-spacing: -0.02em; margin-top: 24px; }
 .auth-hero p { color: #b5c4de; margin-top: 14px; font-size: clamp(15px, 1vw, 17px); max-width: 460px; }
-.auth-feats { display: grid; gap: 12px; }
-.auth-feats div { display: flex; align-items: center; gap: 12px; color: #d6e0f2; font-size: clamp(14.5px, .9vw, 16px); padding: 12px 16px; background: rgba(255, 255, 255, .05); border: 1px solid rgba(255, 255, 255, .08); border-radius: 12px; }
-.auth-feats svg { color: #7fb0ff; }
 .auth-form { display: grid; place-items: center; padding: 32px; }
 .auth-form form { width: min(clamp(360px, 24vw, 440px), 100%); margin-right: auto; margin-left: clamp(0px, 4vw, 80px); }
 .auth-form h1 { font-size: 26px; letter-spacing: -0.02em; }
@@ -388,8 +385,6 @@ tbody tr { animation: rowIn .35s var(--ease) both; animation-delay: calc(min(var
 /* ---------- 에이전트 (투어 커서) ---------- */
 .agent { position: absolute; left: 0; top: 0; transition: transform 1s cubic-bezier(.45, .05, .2, 1); will-change: transform; }
 .agent svg { filter: drop-shadow(0 2px 4px rgba(0, 0, 0, .25)); display: block; }
-.agent-ripple { position: absolute; left: -14px; top: -14px; width: 30px; height: 30px; border-radius: 50%; border: 2px solid var(--agent); animation: ripple .7s ease-out forwards; }
-@keyframes ripple { from { transform: scale(.3); opacity: 1; } to { transform: scale(1.8); opacity: 0; } }
 
 /* ---------- 에이전트 활동 기록 ---------- */
 .agent-log { display: flex; flex-direction: column; }
@@ -454,8 +449,6 @@ tbody tr { animation: rowIn .35s var(--ease) both; animation-delay: calc(min(var
 /* 밝은 쪽: 은은한 푸른 빛 */
 .auth-light { position: absolute; inset: 0; pointer-events: none; background: radial-gradient(640px circle at var(--gx) var(--gy), rgba(37, 110, 244, .09), transparent 65%); }
 .auth-form { position: relative; z-index: 1; }
-.auth-feats div { transition: background .25s, border-color .25s, transform .25s var(--ease); }
-.auth-feats div:hover { background: rgba(255, 255, 255, .1); border-color: rgba(127, 176, 255, .45); transform: translateX(4px); }
 
 /* ---------- 월 마감 진행 ---------- */
 /* 어두운 카드. 글자는 밝게 유지해 대비 확보 */
@@ -686,16 +679,137 @@ th { box-shadow: 0 1px 0 var(--border); }
 
 /* 로그인: 진주시 브랜드 (참진주 로고, 브랜드 4색 띠) */
 .auth { grid-template-rows: auto 1fr; }
-.auth-notice { grid-column: 1 / -1; position: relative; z-index: 2; display: flex; align-items: center; gap: 8px; padding: 8px clamp(16px, 4vw, 48px); background: #f2f4f7; border-bottom: 1px solid var(--border); font-size: 13px; color: #464c53; }
+.auth-notice { grid-column: 1 / -1; position: relative; z-index: 2; display: flex; align-items: center; gap: 8px; padding: 8px clamp(16px, 4vw, 48px); background: #f4f5f7; border-bottom: 1px solid var(--border); font-size: 12.5px; color: #464c53; }
 .auth-notice svg { color: #1450a3; flex-shrink: 0; }
-.auth-eyebrow { display: inline-flex; align-items: center; gap: 8px; width: auto !important; margin: 28px 0 0 !important; padding: 6px 12px; border: 1px solid rgba(255, 255, 255, .16); border-radius: 999px; background: rgba(255, 255, 255, .06); font-size: 13px; font-weight: 600; color: #c9d6ee; }
-.auth-eyebrow svg { color: #f39a1e; }
-.auth-org { position: relative; display: flex; align-items: center; gap: 16px; margin-bottom: 28px; padding-bottom: 20px; border-bottom: 1px solid var(--border); }
+.auth-hero { background: radial-gradient(900px 640px at 90% 0%, rgba(20, 80, 163, .55), transparent 60%), radial-gradient(700px 500px at 0% 100%, rgba(243, 154, 30, .10), transparent 60%), #0a1b3d; justify-content: space-between; padding-top: clamp(40px, 7vh, 72px); padding-bottom: clamp(40px, 7vh, 72px); }
+.auth-hero h2 { font-size: clamp(30px, 2.4vw, 46px); font-weight: 700; line-height: 1.28; letter-spacing: -0.03em; }
+.auth-hero p { color: #a9b8d4; line-height: 1.7; }
+.auth-eyebrow { display: inline-flex; align-items: center; gap: 8px; width: auto !important; margin: 0 !important; padding: 6px 12px; border: 1px solid rgba(255, 255, 255, .14); border-radius: 999px; background: rgba(255, 255, 255, .05); font-size: 13px; font-weight: 600; color: #c9d6ee; }
+.auth-eyebrow::before { content: ''; width: 14px; height: 3px; border-radius: 2px; background: linear-gradient(90deg, #1450a3 0 25%, #e8382c 25% 50%, #f39a1e 50% 75%, #4caf3c 75%); }
+
+.auth-steps ol { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; }
+.auth-steps button { position: relative; display: block; width: 100%; padding: 14px 0 0; border: 0; border-top: 2px solid rgba(255, 255, 255, .14); background: none; font: inherit; text-align: left; color: #7f93b8; cursor: pointer; transition: color .25s; }
+.auth-steps button:hover, .auth-steps .on button { color: #fff; }
+.auth-steps .done button { color: #b5c4de; border-top-color: rgba(255, 255, 255, .45); }
+.auth-steps button:focus-visible { outline: 2px solid #7fb0ff; outline-offset: 4px; border-radius: 4px; }
+.auth-steps .bar { position: absolute; top: -2px; left: 0; height: 2px; width: 0; background: linear-gradient(90deg, #7fb0ff, #fff); }
+.auth-steps .on .bar { animation: step-fill 3.6s linear forwards; }
+.auth-steps.hold .on .bar { animation: none; width: 100%; }
+@keyframes step-fill { to { width: 100%; } }
+.auth-steps .num { display: block; font-size: 11.5px; font-weight: 600; letter-spacing: .06em; opacity: .7; font-variant-numeric: tabular-nums; }
+.auth-steps .lbl { display: block; margin-top: 4px; font-size: 15px; font-weight: 700; }
+.auth-agent { display: flex; gap: 14px; align-items: flex-start; margin-top: 18px; padding: 16px 18px; min-height: 84px; border-radius: 14px; background: rgba(255, 255, 255, .05); border: 1px solid rgba(255, 255, 255, .09); backdrop-filter: blur(6px); }
+.auth-agent .dot { flex-shrink: 0; width: 8px; height: 8px; margin-top: 7px; border-radius: 50%; background: #4caf3c; box-shadow: 0 0 0 0 rgba(76, 175, 60, .5); animation: agent-pulse 2s ease-out infinite; }
+@keyframes agent-pulse { 70% { box-shadow: 0 0 0 7px rgba(76, 175, 60, 0); } 100% { box-shadow: 0 0 0 0 rgba(76, 175, 60, 0); } }
+.auth-agent > div { animation: agent-in .45s var(--ease) both; }
+.auth-agent b { display: flex; align-items: center; gap: 6px; font-size: 13px; color: #fff; }
+.auth-agent b span { font-weight: 500; color: #8fa3c7; }
+.auth-agent b span::before { content: '·'; margin-right: 6px; }
+.auth-hero .auth-agent p { margin: 4px 0 0; font-size: 14px; color: #c3d0e6; max-width: none; }
+@keyframes agent-in { from { opacity: 0; transform: translateY(6px); } }
+
+.auth-org { position: relative; display: flex; align-items: center; gap: 16px; margin-bottom: 32px; padding-bottom: 20px; border-bottom: 1px solid var(--border); }
 .auth-org::after { content: ''; position: absolute; left: 0; bottom: -2px; width: 72px; height: 3px; background: linear-gradient(90deg, #1450a3 0 25%, #e8382c 25% 50%, #f39a1e 50% 75%, #4caf3c 75%); }
-.auth-org img { height: 53px; width: auto; }
-.auth-org .sep { width: 1px; height: 30px; background: var(--border); }
-.auth-org .slogan { margin: 0; padding: 0; border: 0; font-size: 16px; }
-.auth-form h1 { font-size: 24px; }
-.auth-secure { display: flex; gap: 10px; margin-top: 24px; padding: 14px 16px; background: #f5f7fb; border: 1px solid var(--border); border-left: 3px solid #1450a3; border-radius: 8px; }
-.auth-secure svg { color: #1450a3; flex-shrink: 0; margin-top: 2px; }
-.auth-form .auth-secure p { margin: 0; font-size: 12.5px; line-height: 1.6; color: var(--text-muted); }
+.auth-org img { height: 48px; width: auto; }
+.auth-org .sep { width: 1px; height: 26px; background: var(--border); }
+.auth-org .slogan { margin: 0; padding: 0; border: 0; font-size: 15px; }
+.auth-form h1 { font-size: 24px; font-weight: 700; }
+.auth-form .input { height: 48px; transition: border-color .2s, box-shadow .2s; }
+.auth-form .input:hover { border-color: #9aa6b8; }
+.auth-form .btn.primary { transition: transform .15s var(--ease), box-shadow .2s, background .2s; }
+.auth-form .btn.primary:hover:not(:disabled) { box-shadow: 0 8px 20px rgba(37, 110, 244, .28); }
+.auth-form .btn.primary:active:not(:disabled) { transform: translateY(1px); }
+.caps { display: flex; align-items: center; gap: 6px; margin-top: 6px; font-size: 12.5px; color: #b45309; }
+.auth-form .auth-help { margin: 16px 0 0; font-size: 13px; color: var(--text-muted); }
+.auth-secure { display: flex; gap: 8px; margin-top: 28px; padding-top: 16px; border-top: 1px solid var(--border); }
+.auth-secure svg { color: #8a94a3; flex-shrink: 0; margin-top: 2px; }
+.auth-form .auth-secure p { margin: 0; font-size: 12px; line-height: 1.6; color: #8a94a3; }
+@media (prefers-reduced-motion: reduce) { .auth-agent .dot, .auth-agent > div { animation: none; } }
+
+/* 넓은 화면에서 비어 보이지 않게: 본문을 한 덩어리로 가운데, 폭·글자 크기를 화면에 맞춰 키운다 */
+.auth-hero { display: grid; grid-template-rows: auto 1fr; justify-content: stretch; }
+.auth-hero > * { max-width: clamp(560px, 36vw, 760px); }
+.auth-hero-main { align-self: center; display: grid; gap: clamp(16px, 2vh, 24px); }
+.auth-hero-main h2 { margin: 4px 0 0; font-size: clamp(30px, 2.5vw, 52px); }
+.auth-hero-main > p { margin: 0; font-size: clamp(15px, .95vw, 18px); max-width: 36em; }
+.auth-steps { margin-top: clamp(16px, 4vh, 40px); padding: clamp(20px, 1.6vw, 28px); border-radius: 18px; background: rgba(255, 255, 255, .035); border: 1px solid rgba(255, 255, 255, .08); }
+.auth-agent { background: rgba(0, 0, 0, .14); }
+.auth-todo { list-style: none; margin: 12px 0 0; padding: 0; display: grid; gap: 8px; }
+.auth-todo li { display: flex; align-items: center; gap: 8px; font-size: 13.5px; color: #7f93b8; animation: todo-on .3s var(--ease) var(--d) both; }
+.auth-todo li svg { color: #4caf3c; }
+@keyframes todo-on { from { opacity: .35; filter: grayscale(1); } to { color: #d6e0f2; } }
+.auth-form form { width: min(clamp(360px, 25vw, 480px), 100%); }
+.auth-form h1 { font-size: clamp(24px, 1.4vw, 30px); }
+.auth-form p { font-size: clamp(14.5px, .8vw, 16px); }
+.auth-org img { height: clamp(48px, 3vw, 60px); }
+.auth-org .slogan { font-size: clamp(15px, .85vw, 17px); }
+@media (prefers-reduced-motion: reduce) { .auth-todo li { animation: none; color: #d6e0f2; } }
+.auth-eyebrow { justify-self: start; }
+.auth-form { padding-bottom: 88px; }
+
+/* 앱 안 진주시 표시: 상단바 왼쪽 참진주 로고, 사이드바 맨 위 브랜드 4색 띠 */
+.org-mark { display: flex; align-items: center; padding-right: 16px; margin-right: 4px; border-right: 1px solid var(--border); flex-shrink: 0; border-radius: 4px; }
+.org-mark img { height: 32px; width: auto; display: block; }
+.org-mark:focus-visible { outline: 2px solid var(--primary); outline-offset: 4px; }
+.sidebar::before { content: ''; display: block; flex-shrink: 0; height: 3px; background: linear-gradient(90deg, #1450a3 0 25%, #e8382c 25% 50%, #f39a1e 50% 75%, #4caf3c 75%); }
+@media (max-width: 640px) { .org-mark { display: none; } }
+
+/* 진주시 디테일: 촉석루·남강 배경, 시청 주소, 4색 표식 */
+.auth-hero { grid-template-rows: auto 1fr auto; }
+.auth-scape { position: absolute !important; left: 0; right: 0; bottom: 0; width: 100% !important; max-width: none !important; height: clamp(150px, 26vh, 260px); margin: 0 !important; z-index: 0 !important; pointer-events: none; fill: none; stroke: rgba(170, 200, 255, .13); stroke-width: 1.3; stroke-linecap: round; stroke-linejoin: round; }
+.auth-scape .pavilion { stroke: rgba(190, 215, 255, .2); }
+.auth-scape .wave { stroke: rgba(127, 176, 255, .16); animation: river 14s linear infinite; }
+.auth-scape .wave:nth-of-type(2n) { animation-duration: 19s; animation-direction: reverse; }
+@keyframes river { to { transform: translateX(-80px); } }
+.auth-hero .auth-city { margin: 0; font-size: 12.5px; color: #6f84aa; letter-spacing: -0.01em; }
+.city-tag { display: inline-flex; align-items: center; gap: 8px; margin: 0; font-size: 12.5px; font-weight: 600; letter-spacing: .02em; color: #9fb2d3; }
+.city-tag::before { content: ''; width: 18px; height: 3px; border-radius: 2px; background: linear-gradient(90deg, #1450a3 0 25%, #e8382c 25% 50%, #f39a1e 50% 75%, #4caf3c 75%); }
+.intro-center > .city-tag { animation: fadeUp .6s .2s var(--ease) both; }
+.privacy-col > .city-tag { margin-top: 18px; color: #7f8ea8; }
+@media (prefers-reduced-motion: reduce) { .auth-scape .wave { animation: none; } }
+
+/* 왼쪽 위 로고를 본문과 한 덩어리로: 흰 타일 위 참진주 로고 */
+.auth-hero { grid-template-rows: 1fr auto; }
+.auth-hero-main > .auth-brand { display: flex; align-items: center; gap: 14px; margin-bottom: clamp(8px, 2vh, 20px); }
+.auth-brand .tile { display: grid; place-items: center; width: 64px; height: 64px; border-radius: 16px; background: #fff; box-shadow: 0 6px 20px rgba(0, 0, 0, .25), inset 0 -2px 0 rgba(0, 0, 0, .06); flex-shrink: 0; }
+.auth-brand .tile img { width: 50px; height: auto; }
+.auth-brand b { display: block; font-size: 19px; font-weight: 700; color: #fff; letter-spacing: -0.02em; }
+.auth-brand small { display: block; margin-top: 2px; font-size: 13px; color: #8fa3c7; }
+/* 왼쪽에 로고가 보일 때는 오른쪽 로고를 빼고 슬로건만 (한 화면에 로고 두 번 안 나오게) */
+@media (min-width: calc(1000px + 1px)) { .auth-org img, .auth-org .sep { display: none; } .auth-org { padding-bottom: 16px; margin-bottom: 28px; } }
+/* 낮은 화면: 왼쪽 카드가 잘리지 않게 덜어 낸다 */
+.auth-hero { overflow: hidden; }
+.auth-hero .auth-city { position: relative; z-index: 1; text-shadow: 0 1px 8px #0a1b3d; }
+@media (max-height: 860px) { .auth-todo, .auth-scape { display: none; } .auth-hero-main > p { display: none; } .auth-agent { min-height: 0; } }
+@media (max-height: 700px) { .auth-steps { display: none; } }
+.auth-scape { height: clamp(110px, 18vh, 200px); }
+.auth-steps { background: rgba(10, 27, 61, .55); backdrop-filter: blur(4px); position: relative; z-index: 1; }
+@media (max-width: 1000px) { .auth-hero { display: none; } .auth-form .foot { padding-left: 32px; } }
+.auth-scape { overflow: visible; }
+.auth-org .slogan-img { display: block; height: clamp(22px, 1.3vw, 26px); width: auto; }
+.auth-scape { height: clamp(220px, 34vh, 400px); }
+
+/* 남강: 물결 선만 한 방향으로 흐른다 (가까울수록 빠르게) */
+.auth-scape .wave { animation: river var(--t, 10s) linear infinite !important; animation-direction: normal !important; }
+@keyframes river { from { transform: translateX(0); } to { transform: translateX(-160px); } }
+
+@media (prefers-reduced-motion: reduce) { .auth-scape .wave { animation: none !important; } }
+.auth-scape .fine { stroke: rgba(190, 215, 255, .14); stroke-width: .8; }
+
+/* 유등: 마우스를 따라오는 빛은 격자 대신 따뜻한 등불빛, 강 위에서는 유등이 떠서 흘러간다 */
+.auth-hero::before { background: radial-gradient(440px circle at var(--gx) var(--gy), rgba(243, 154, 30, .16), rgba(232, 120, 40, .05) 45%, transparent 70%); }
+.auth-hero::after { content: none; }
+.auth-light { background: radial-gradient(640px circle at var(--gx) var(--gy), rgba(243, 154, 30, .05), transparent 65%); }
+.lanterns { position: absolute !important; inset: 0; width: auto !important; max-width: none !important; margin: 0 !important; z-index: 0 !important; pointer-events: none; overflow: hidden; }
+.lanterns span { position: absolute; width: 0; height: 0; animation: lantern-drift 11s linear forwards; }
+.lanterns i { position: absolute; left: -5px; top: -14px; width: 10px; height: 13px; border-radius: 3px 3px 4px 4px; background: radial-gradient(circle at 50% 62%, #fff1cf, #f6b04a 48%, #d9661f); box-shadow: 0 0 10px 3px rgba(246, 168, 60, .55), 0 0 30px 10px rgba(243, 154, 30, .16); animation: lantern-bob 2.6s ease-in-out infinite alternate; }
+.lanterns i::before { content: ''; position: absolute; left: 2px; right: 2px; top: -2px; height: 2px; border-radius: 1px; background: #8a3b12; }
+.lanterns i::after { content: ''; position: absolute; left: 50%; top: 16px; width: 4px; height: 18px; transform: translateX(-50%); background: linear-gradient(rgba(246, 168, 60, .5), transparent); filter: blur(1.2px); }
+@keyframes lantern-drift { 0% { opacity: 0; transform: translateX(0) scale(.5); } 8% { opacity: 1; transform: translateX(-10px) scale(1); } 78% { opacity: 1; } 100% { opacity: 0; transform: translateX(-210px) scale(.9); } }
+@keyframes lantern-bob { from { transform: translateY(-1.5px) rotate(-3deg); } to { transform: translateY(1.5px) rotate(3deg); } }
+.lanterns i { scale: var(--z, 1); }
+
+/* 앱 안: 로그인 왼쪽과 같은 은은한 빛 (한쪽은 진주 파랑, 반대쪽은 유등빛 주황) */
+.sidebar { background: radial-gradient(420px 320px at 0% 100%, rgba(20, 80, 163, .32), transparent 70%), radial-gradient(320px 240px at 100% 100%, rgba(243, 154, 30, .06), transparent 70%), #0f1c33; }
+.card.close { --close-glow: radial-gradient(760px 320px at 100% 0%, rgba(20, 80, 163, .5), transparent 62%), radial-gradient(520px 260px at 0% 100%, rgba(243, 154, 30, .09), transparent 62%); background-image: var(--close-glow); }
+.card.close:hover { background-image: radial-gradient(420px circle at var(--mx, 50%) var(--my, 50%), rgba(91, 155, 255, .16), transparent 45%), var(--close-glow); }

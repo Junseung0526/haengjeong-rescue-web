@@ -2,12 +2,13 @@ import { Component, useCallback, useEffect, useMemo, useRef, useState } from 're
 import { createPortal } from 'react-dom'
 import { BrowserRouter, Navigate, NavLink, Route, Routes, useLocation, useNavigate } from 'react-router-dom'
 import {
-  Bell, Building2, CircleHelp, CalendarCheck, CalendarClock, Calculator, CheckCircle2, ChevronDown, ChevronRight, ClipboardCheck, Command, Eye, EyeOff,
-  FileDown, FileSpreadsheet, GitCompare, KeyRound, LayoutDashboard, Loader2, LogOut, PanelLeftClose, PanelLeftOpen, ScanLine, Sparkles,
+  Bell, Building2, CircleHelp, CalendarCheck, CalendarClock, Calculator, CheckCircle2, ChevronDown, ChevronRight, Command, Eye, EyeOff,
+  FileDown, FileSpreadsheet, GitCompare, KeyRound, LayoutDashboard, Loader2, LogOut, PanelLeftClose, PanelLeftOpen, ScanLine,
   ScrollText, Search, Send, ShieldAlert, ShieldCheck, Trash2, TriangleAlert, Users as UsersIcon, UserCog, Wallet, XCircle,
 } from 'lucide-react'
 import { api, getToken, setToken } from './api'
 import { Intro, Tour, tourSeen } from './agents'
+import { JinjuScape } from './scape'
 import { AppCtx, ErrorBox, Logo, FormModal, ROLE, projName, thisMonth, useApi, useApp, useDeptNames } from './ui'
 import Dashboard from './pages/Dashboard'
 import Participants from './pages/Participants'
@@ -78,11 +79,93 @@ class PageBoundary extends Component {
 
 const NARROW = '(max-width: 1279px)'
 
-const FEATS = [
-  [FileSpreadsheet, '부서별 엑셀을 한 번에 취합하고 자동 검증'],
-  [Calculator, '인건비·4대보험 귀속을 규칙대로 계산'],
-  [ClipboardCheck, '마감 현황과 독촉, 제출 양식 출력까지 한 곳에서'],
+const STEPS = [
+  ['취합', '부서별 엑셀 취합', '부서마다 올린 참여자 명부와 출근부를 하나의 표로 모읍니다.', ['부서 제출 파일 확인', '시트·열 이름 맞추기', '참여자별로 행 합치기']],
+  ['검증', '오류 자동 검증', '주민번호·계좌·근무일이 맞지 않는 행을 찾아 담당자에게 알립니다.', ['주민번호 형식 확인', '계좌번호·예금주 대조', '근무일 범위 확인']],
+  ['계산', '인건비 계산', '근무일과 단가로 인건비를 계산하고, 금액마다 계산 근거를 남깁니다.', ['근무일 × 일 단가', '주휴·초과근무 반영', '계산 근거 기록']],
+  ['귀속', '4대보험 귀속', '사업별 4대보험 부담분을 나눠 예산 항목에 귀속합니다.', ['국민연금·건강보험 산정', '고용·산재보험 산정', '사업별 예산 항목 귀속']],
+  ['출력', '지급·제출 양식', '지급 명세와 기관 제출 양식을 바로 내려받을 수 있게 만듭니다.', ['지급 명세서 만들기', '기관 제출 양식 만들기', '담당자 확인 요청']],
 ]
+const STEP_MS = 3600
+const CITY_HALL = '52789 경상남도 진주시 동진로 155 (상대동)'
+
+
+// 남강유등축제처럼 강 위에 유등이 늘 몇 개 떠서 흘러가고, 마우스가 강 위를 지나가면 더 띄운다
+const LANTERN_AMBIENT = 12 // 가만히 있을 때 떠 있는 개수
+const LANTERN_MAX = 26
+function Lanterns() {
+  const box = useRef(null)
+  const [list, setList] = useState([])
+  useEffect(() => {
+    const hero = box.current?.parentElement
+    if (!hero || matchMedia('(prefers-reduced-motion: reduce)').matches) return
+    let id = 0
+    let last = { t: 0, x: -999 }
+    // 물결(viewBox y 192~228) 위 화면 좌표. 그림이 안 보이면(낮은 화면) null
+    const water = () => {
+      const scape = hero.querySelector('.auth-scape')
+      if (!scape || !scape.getClientRects().length) return null
+      const s = scape.getBoundingClientRect()
+      const h = hero.getBoundingClientRect()
+      return { s, h, k: Math.min(s.width / 800, s.height / 230) }
+    }
+    // x는 hero 기준. delay(초, 음수)를 주면 이미 흘러가던 중인 유등으로 시작한다
+    const add = (w, x, { cap = LANTERN_MAX, delay = 0 } = {}) => {
+      const t = 9 + Math.random() * 5
+      const l = { id: ++id, x, y: w.s.bottom - w.h.top - w.k * (8 + Math.random() * 28), z: 0.75 + Math.random() * 0.45, t, d: delay }
+      setList((a) => (a.length >= cap ? (cap === LANTERN_MAX ? [...a.slice(1), l] : a) : [...a, l]))
+    }
+    const ambient = (delay) => { const w = water(); if (w) add(w, Math.random() * (w.h.width + 200), { cap: LANTERN_AMBIENT, delay }) }
+    for (let n = 0; n < LANTERN_AMBIENT * 0.7; n++) ambient(-Math.random() * 8)
+    const every = setInterval(() => ambient(0), 950)
+    const move = (e) => {
+      const w = water()
+      if (!w || e.clientY < w.s.bottom - w.k * 80 || e.clientY > w.s.bottom) return
+      const now = performance.now()
+      if (now - last.t < 140 || Math.abs(e.clientX - last.x) < 22) return
+      last = { t: now, x: e.clientX }
+      add(w, e.clientX - w.h.left + (Math.random() - 0.5) * 16)
+    }
+    hero.addEventListener('pointermove', move)
+    return () => { hero.removeEventListener('pointermove', move); clearInterval(every); setList([]) }
+  }, [])
+  return <div ref={box} className="lanterns" aria-hidden="true">{list.map((l) => <span key={l.id} onAnimationEnd={(e) => { if (e.target === e.currentTarget) setList((a) => a.filter((v) => v.id !== l.id)) }} style={{ left: l.x, top: l.y, '--z': l.z, animationDuration: `${l.t}s`, animationDelay: `${l.d}s` }}><i /></span>)}</div>
+}
+
+// 로그인 화면 왼쪽: 월 마감 5단계를 차례로 보여 주고, 마우스를 올리거나 누르면 그 단계에 멈춘다
+function AuthSteps() {
+  const [i, setI] = useState(0)
+  const [hold, setHold] = useState(false)
+  const still = typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches
+  useEffect(() => {
+    if (hold || still) return
+    const t = setTimeout(() => setI((n) => (n + 1) % STEPS.length), STEP_MS)
+    return () => clearTimeout(t)
+  }, [i, hold, still])
+  const [k, title, text, todo] = STEPS[i]
+  return (
+    <div className={'auth-steps' + (hold || still ? ' hold' : '')} onPointerEnter={() => setHold(true)} onPointerLeave={() => setHold(false)} onFocus={() => setHold(true)} onBlur={() => setHold(false)}>
+      <ol>
+        {STEPS.map(([k], n) => (
+          <li key={k} className={n === i ? 'on' : n < i ? 'done' : ''}>
+            <button type="button" aria-pressed={n === i} onClick={() => setI(n)} onPointerEnter={() => setI(n)}>
+              <span className="bar" key={n === i ? `${i}-${hold}` : 'x'} aria-hidden="true" />
+              <span className="num">{String(n + 1).padStart(2, '0')}</span>
+              <span className="lbl">{k}</span>
+            </button>
+          </li>
+        ))}
+      </ol>
+      <div className="auth-agent">
+        <span className="dot" aria-hidden="true" />
+        <div key={i}>
+          <b>{k} 에이전트<span>{title}</span></b><p>{text}</p>
+          <ul className="auth-todo">{todo.map((t, n) => <li key={t} style={{ '--d': `${0.35 + n * 0.75}s` }}><CheckCircle2 size={15} />{t}</li>)}</ul>
+        </div>
+      </div>
+    </div>
+  )
+}
 
 // 모든 화면 맨 아래 저작권·이용 안내
 // 자리 비움 화면: 일정 시간 작동이 없거나 상단 버튼을 누르면 개인정보가 보이지 않게 화면을 가린다
@@ -123,6 +206,7 @@ function Privacy({ user, lock, onBack }) {
         <span className="privacy-pill"><EyeOff size={14} />{lock.idle ? `${IDLE_MIN}분 동안 작업이 없어 화면을 가렸습니다` : '자리 비움'} · {mins < 1 ? '방금' : `${mins}분 전부터`}</span>
         <button className="btn primary privacy-back" onClick={onBack}>업무로 돌아가기</button>
         <p className="privacy-hint">개인정보 보호를 위해 내용을 가렸습니다. 돌아가면 보던 화면 그대로 이어집니다.</p>
+        <p className="city-tag">진주시 · 행정 구조대</p>
       </div>
     </div>,
     document.body,
@@ -141,6 +225,7 @@ function Footer() {
 function Login({ onLogin }) {
   const [v, setV] = useState({ username: '', password: '' })
   const [show, setShow] = useState(false)
+  const [caps, setCaps] = useState(false)
   const [error, setError] = useState(null)
   const [busy, setBusy] = useState(false)
   const submit = async (e) => {
@@ -168,20 +253,23 @@ function Login({ onLogin }) {
       <div className="auth-notice"><ShieldCheck size={14} />진주시 내부 행정업무 시스템 · 인가된 담당자만 이용할 수 있습니다</div>
       <div className="auth-light" aria-hidden="true" />
       <aside className="auth-hero">
-        <div>
-          <div className="brand" style={{ padding: 0 }}><Logo />행정 구조대</div>
-          <div className="auth-eyebrow"><Sparkles size={14} />AI 에이전트와 함께하는 진주시 인건비 정산</div>
+        <div className="auth-hero-main">
+          <div className="auth-brand"><span className="tile"><img src="/jinju-logo.png" alt="진주시" width="72" height="53" /></span><div><b>행정 구조대</b><small>진주시 통합 행정 시스템</small></div></div>
+          <div className="auth-eyebrow">AI 에이전트와 함께하는 진주시 인건비 정산</div>
           <h2>흩어진 행정 자료를<br />한 화면에서 검증하고 마감합니다.</h2>
-          <p>참여자 관리부터 인건비 계산, 4대보험 귀속, 제출 양식 출력까지 사업 행정 전 과정을 지원합니다.</p>
+          <p>참여자 관리부터 인건비 계산, 4대보험 귀속, 제출 양식 출력까지 월 마감 전 과정을 에이전트가 함께 처리합니다.</p>
+          <AuthSteps />
         </div>
-        <div className="auth-feats">{FEATS.map(([I, t]) => <div key={t}><I size={18} />{t}</div>)}</div>
+        <p className="auth-city">진주시청 · {CITY_HALL}</p>
+        <JinjuScape />
+        <Lanterns />
       </aside>
       <div className="auth-form">
         <form onSubmit={submit}>
           <div className="auth-org">
             <img src="/jinju-logo.png" alt="참진주 진주시" width="72" height="53" />
             <span className="sep" aria-hidden="true" />
-            <div className="slogan" aria-label="부강한 진주 행복한 시민"><span className="r">부강한 진주</span> <span className="b">행복한 시민</span></div>
+            <img className="slogan-img" src="/jinju-slogan.png" alt="부강한 진주 행복한 시민" width="218" height="28" />
           </div>
           <h1>행정 구조대 로그인</h1>
           <p>진주시 업무 담당자 전용입니다.<br />발급받은 계정으로 로그인하세요.</p>
@@ -190,14 +278,15 @@ function Login({ onLogin }) {
             <label className="field"><span>아이디</span><input className="input" autoFocus autoComplete="username" required value={v.username} onChange={(e) => setV({ ...v, username: e.target.value })} /></label>
             <label className="field"><span>비밀번호</span>
               <div className="pw">
-                <input className="input" type={show ? 'text' : 'password'} autoComplete="current-password" required value={v.password} onChange={(e) => setV({ ...v, password: e.target.value })} />
+                <input className="input" type={show ? 'text' : 'password'} autoComplete="current-password" required value={v.password} onChange={(e) => setV({ ...v, password: e.target.value })} onKeyDown={(e) => setCaps(e.getModifierState('CapsLock'))} onKeyUp={(e) => setCaps(e.getModifierState('CapsLock'))} onBlur={() => setCaps(false)} aria-describedby={caps ? 'caps' : undefined} />
                 <button type="button" className="icon-btn" style={{ width: 36, height: 36 }} onClick={() => setShow(!show)} aria-label={show ? '비밀번호 숨기기' : '비밀번호 보기'}>{show ? <EyeOff size={17} /> : <Eye size={17} />}</button>
               </div>
+              {caps && <small id="caps" className="caps"><TriangleAlert size={13} />Caps Lock이 켜져 있습니다</small>}
             </label>
             <button className="btn primary" style={{ height: 48, marginTop: 8 }} disabled={busy}>{busy && <Loader2 size={16} className="spin" />}{busy ? '로그인 중…' : '로그인'}</button>
           </div>
-          <div className="auth-secure"><ShieldAlert size={16} /><p>이 시스템은 인가된 진주시 업무 담당자만 사용할 수 있습니다. 모든 접속·열람 기록이 저장되며, 개인정보를 무단으로 열람하거나 유출하면 관계 법령에 따라 처벌받을 수 있습니다.</p></div>
-          <p className="muted" style={{ fontSize: 13, marginTop: 16 }}>계정이 없거나 잠겼다면 시스템 관리자에게 문의하세요.</p>
+          <p className="auth-help">계정이 없거나 잠겼다면 시스템 관리자에게 문의하세요.</p>
+          <div className="auth-secure"><ShieldAlert size={15} /><p>인가된 진주시 업무 담당자만 사용할 수 있습니다. 모든 접속·열람 기록이 저장되며, 개인정보를 무단으로 열람·유출하면 관계 법령에 따라 처벌받을 수 있습니다.</p></div>
         </form>
         <Footer />
       </div>
@@ -340,7 +429,7 @@ function Shell({ user, logout, setUser }) {
 
   // 탭 제목에 화면 이름과 안 읽은 알림 수를 보여준다
   const n = unread?.count || 0
-  useEffect(() => { document.title = lock ? '자리 비움 · 행정 구조대' : `${n ? `(${n > 99 ? '99+' : n}) ` : ''}${cur ? `${cur[1]} · ` : ''}행정 구조대` }, [cur?.[1], n, !lock]) // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { document.title = lock ? '자리 비움 · 행정 구조대' : `${n ? `(${n > 99 ? '99+' : n}) ` : ''}${cur ? `${cur[1]} · ` : ''}행정 구조대 · 진주시` }, [cur?.[1], n, !lock]) // eslint-disable-line react-hooks/exhaustive-deps
   // 내용을 내리면 상단 바에 그림자를 깐다
   const [scrolled, setScrolled] = useState(false)
   useEffect(() => {
@@ -380,7 +469,7 @@ function Shell({ user, logout, setUser }) {
   return (
     <div className={`shell${collapsed ? ' collapsed' : ''}`}>
       <aside className="sidebar" onMouseOver={onTip} onFocus={onTip} onMouseLeave={() => setTip(null)} onBlur={() => setTip(null)} onScroll={() => setTip(null)}>
-        <button type="button" className="brand" onClick={toggle} data-tip="메뉴 펼치기" title={collapsed ? undefined : '메뉴 접기'} aria-expanded={!collapsed}><Logo /><span className="brand-text">행정 구조대<small>통합 행정 시스템</small></span></button>
+        <button type="button" className="brand" onClick={toggle} data-tip="메뉴 펼치기" title={collapsed ? undefined : '메뉴 접기'} aria-expanded={!collapsed}><Logo /><span className="brand-text">행정 구조대<small>진주시 통합 행정 시스템</small></span></button>
         <nav className="nav" aria-label="주 메뉴">
           {groups.map(([g, list]) => {
             const open = collapsed || opened.has(g)
@@ -412,6 +501,7 @@ function Shell({ user, logout, setUser }) {
       </aside>
       <div className="main">
         <header className={`topbar${scrolled ? ' scrolled' : ''}`}>
+          <a className="org-mark" href="https://www.jinju.go.kr" target="_blank" rel="noreferrer" title="진주시청 누리집 (새 창)"><img src="/jinju-logo.png" alt="진주시" width="44" height="32" /></a>
           {cur && <div className="crumb">{cur[5]}<ChevronRight size={14} /><b>{cur[1]}</b></div>}
           <div className="spacer" />
           <ContextBar />
