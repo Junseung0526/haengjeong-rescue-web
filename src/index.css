@@ -683,3 +683,19 @@ th { box-shadow: 0 1px 0 var(--border); }
 .nav-tip::before { content: ''; position: absolute; left: -4px; top: 50%; width: 8px; height: 8px; background: inherit; transform: translateY(-50%) rotate(45deg); border-radius: 1px; }
 .nav-tip small { color: #8fa0bd; font-size: 11.5px; font-weight: 500; }
 @keyframes tipIn { from { opacity: 0; transform: translate(-4px, -50%); } }
+
+/* 로그인: 진주시 브랜드 (참진주 로고, 브랜드 4색 띠) */
+.auth { grid-template-rows: auto 1fr; }
+.auth-notice { grid-column: 1 / -1; position: relative; z-index: 2; display: flex; align-items: center; gap: 8px; padding: 8px clamp(16px, 4vw, 48px); background: #f2f4f7; border-bottom: 1px solid var(--border); font-size: 13px; color: #464c53; }
+.auth-notice svg { color: #1450a3; flex-shrink: 0; }
+.auth-eyebrow { display: inline-flex; align-items: center; gap: 8px; width: auto !important; margin: 28px 0 0 !important; padding: 6px 12px; border: 1px solid rgba(255, 255, 255, .16); border-radius: 999px; background: rgba(255, 255, 255, .06); font-size: 13px; font-weight: 600; color: #c9d6ee; }
+.auth-eyebrow svg { color: #f39a1e; }
+.auth-org { position: relative; display: flex; align-items: center; gap: 16px; margin-bottom: 28px; padding-bottom: 20px; border-bottom: 1px solid var(--border); }
+.auth-org::after { content: ''; position: absolute; left: 0; bottom: -2px; width: 72px; height: 3px; background: linear-gradient(90deg, #1450a3 0 25%, #e8382c 25% 50%, #f39a1e 50% 75%, #4caf3c 75%); }
+.auth-org img { height: 53px; width: auto; }
+.auth-org .sep { width: 1px; height: 30px; background: var(--border); }
+.auth-org .slogan { margin: 0; padding: 0; border: 0; font-size: 16px; }
+.auth-form h1 { font-size: 24px; }
+.auth-secure { display: flex; gap: 10px; margin-top: 24px; padding: 14px 16px; background: #f5f7fb; border: 1px solid var(--border); border-left: 3px solid #1450a3; border-radius: 8px; }
+.auth-secure svg { color: #1450a3; flex-shrink: 0; margin-top: 2px; }
+.auth-form .auth-secure p { margin: 0; font-size: 12.5px; line-height: 1.6; color: var(--text-muted); }
