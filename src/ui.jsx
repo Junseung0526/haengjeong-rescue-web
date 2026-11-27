@@ -1,7 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { Link, useSearchParams } from 'react-router-dom'
-import { AlertTriangle, ArrowDown, ArrowUp, ArrowUpDown, CircleAlert, RefreshCw, FileUp, Inbox, Info, Loader2, Paperclip, Search, X } from 'lucide-react'
+import { AlertTriangle, ArrowDown, ArrowUp, ArrowUpDown, Building2, Calculator, CircleAlert, Eye, RefreshCw, FileUp, Inbox, Info, Loader2, Paperclip, Search, ShieldCheck, UserRound, X } from 'lucide-react'
 import { api, getToken } from './api'
 
 export const AppCtx = createContext(null)
@@ -49,6 +49,15 @@ export const LABEL = {
 export const ROLE = {
   system_admin: '시스템 관리자', payroll_officer: '인건비 담당자', department_head: '부서장', department_staff: '부서 담당자', viewer: '조회자',
 }
+// 역할마다 정해진 프로필(아이콘·색). 사람 사진 대신 역할이 한눈에 보이게 한다
+const ROLE_FACE = {
+  system_admin: [ShieldCheck, 'admin'], payroll_officer: [Calculator, 'payroll'], department_head: [Building2, 'head'],
+  department_staff: [UserRound, 'staff'], viewer: [Eye, 'viewer'],
+}
+export function RoleAvatar({ role, size = 18 }) {
+  const [Icon, tone] = ROLE_FACE[role] ?? [UserRound, 'staff']
+  return <span className={`avatar role-av ${tone}`} aria-hidden="true"><Icon size={size} strokeWidth={2} /></span>
+}
 export const INSURANCE = { national_pension: '국민연금', health: '건강보험', long_term_care: '장기요양', employment: '고용보험', industrial_accident: '산재보험' }
 // 탭·필터·검색을 주소(?tab=…)에 담아 새로고침·뒤로가기·링크 공유 때도 그대로 보이게 한다
 export function useUrlState(key, fallback = '') {
@@ -80,8 +89,9 @@ export function Badge({ v, tone, children }) {
   return <span className={`badge ${tone ?? t}`}>{children ?? text}</span>
 }
 
-export const Person = ({ name, sub }) => (
-  <span className="name"><span className="avatar">{name?.[0] || '?'}</span><span>{name}{sub && <div className="mono" style={{ fontWeight: 400 }}>{sub}</div>}</span></span>
+// role을 주면 계정이므로 역할별 정해진 프로필을, 없으면(참여자) 이름 첫 글자를 보여 준다
+export const Person = ({ name, sub, role }) => (
+  <span className="name">{role ? <RoleAvatar role={role} size={15} /> : <span className="avatar">{name?.[0] || '?'}</span>}<span>{name}{sub && <div className="mono" style={{ fontWeight: 400 }}>{sub}</div>}</span></span>
 )
 
 /* ---------- 모션 ---------- */
@@ -400,16 +410,26 @@ export const RowActions = ({ children }) => <div className="actions row-actions"
 /* ---------- 모달·드로어 ---------- */
 // wide면 오른쪽에서 열리는 드로어
 export function Modal({ title, sub, onClose, children, footer, wide }) {
+  const box = useRef(null)
+  // 열리면 포커스를 창 안으로(입력칸이 먼저 잡았으면 그대로), 닫히면 연 버튼으로 돌려준다
+  useEffect(() => {
+    const prev = document.activeElement
+    const t = requestAnimationFrame(() => { if (!box.current?.contains(document.activeElement)) box.current?.focus() })
+    return () => { cancelAnimationFrame(t); if (prev?.isConnected) prev.focus?.() }
+  }, [])
   useEffect(() => {
     const onKey = (e) => e.key === 'Escape' && onClose()
     window.addEventListener('keydown', onKey)
+    // 스크롤바가 사라진 만큼 오른쪽을 채워 뒤 화면이 옆으로 밀리지 않게 한다
+    const sb = window.innerWidth - document.documentElement.clientWidth
     document.body.style.overflow = 'hidden'
-    return () => { window.removeEventListener('keydown', onKey); document.body.style.overflow = '' }
+    if (sb > 0) document.body.style.paddingRight = `${sb}px`
+    return () => { window.removeEventListener('keydown', onKey); document.body.style.overflow = ''; document.body.style.paddingRight = '' }
   }, [onClose])
   // 화면 진입 애니메이션(transform)이 걸린 부모 안에서는 position:fixed가 부모 기준이 되므로 body에 그린다
   return createPortal(
     <div className={`overlay${wide ? ' drawer' : ''}`} onMouseDown={(e) => e.target === e.currentTarget && onClose()}>
-      <div className="modal" role="dialog" aria-modal="true" aria-label={title}>
+      <div className="modal" role="dialog" aria-modal="true" aria-label={title} tabIndex={-1} ref={box}>
         <div className="modal-head">
           <div><h2>{title}</h2>{sub && <div className="muted" style={{ fontSize: 13.5, marginTop: 2 }}>{sub}</div>}</div>
           <button className="icon-btn" onClick={onClose} aria-label="닫기"><X size={18} /></button>
