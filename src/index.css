@@ -794,3 +794,4 @@ th { box-shadow: 0 1px 0 var(--border); }
 @keyframes river { from { transform: translateX(0); } to { transform: translateX(-160px); } }
 
 @media (prefers-reduced-motion: reduce) { .auth-scape .wave { animation: none !important; } }
+.auth-scape .fine { stroke: rgba(190, 215, 255, .14); stroke-width: .8; }
