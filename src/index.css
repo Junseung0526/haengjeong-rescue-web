@@ -795,3 +795,15 @@ th { box-shadow: 0 1px 0 var(--border); }
 
 @media (prefers-reduced-motion: reduce) { .auth-scape .wave { animation: none !important; } }
 .auth-scape .fine { stroke: rgba(190, 215, 255, .14); stroke-width: .8; }
+
+/* 유등: 마우스를 따라오는 빛은 격자 대신 따뜻한 등불빛, 강 위에서는 유등이 떠서 흘러간다 */
+.auth-hero::before { background: radial-gradient(440px circle at var(--gx) var(--gy), rgba(243, 154, 30, .16), rgba(232, 120, 40, .05) 45%, transparent 70%); }
+.auth-hero::after { content: none; }
+.auth-light { background: radial-gradient(640px circle at var(--gx) var(--gy), rgba(243, 154, 30, .05), transparent 65%); }
+.lanterns { position: absolute !important; inset: 0; width: auto !important; max-width: none !important; margin: 0 !important; z-index: 0 !important; pointer-events: none; overflow: hidden; }
+.lanterns span { position: absolute; width: 0; height: 0; animation: lantern-drift 11s linear forwards; }
+.lanterns i { position: absolute; left: -5px; top: -14px; width: 10px; height: 13px; border-radius: 3px 3px 4px 4px; background: radial-gradient(circle at 50% 62%, #fff1cf, #f6b04a 48%, #d9661f); box-shadow: 0 0 10px 3px rgba(246, 168, 60, .55), 0 0 30px 10px rgba(243, 154, 30, .16); animation: lantern-bob 2.6s ease-in-out infinite alternate; }
+.lanterns i::before { content: ''; position: absolute; left: 2px; right: 2px; top: -2px; height: 2px; border-radius: 1px; background: #8a3b12; }
+.lanterns i::after { content: ''; position: absolute; left: 50%; top: 16px; width: 4px; height: 18px; transform: translateX(-50%); background: linear-gradient(rgba(246, 168, 60, .5), transparent); filter: blur(1.2px); }
+@keyframes lantern-drift { 0% { opacity: 0; transform: translateX(0) scale(.5); } 8% { opacity: 1; transform: translateX(-10px) scale(1); } 78% { opacity: 1; } 100% { opacity: 0; transform: translateX(-210px) scale(.9); } }
+@keyframes lantern-bob { from { transform: translateY(-1.5px) rotate(-3deg); } to { transform: translateY(1.5px) rotate(3deg); } }

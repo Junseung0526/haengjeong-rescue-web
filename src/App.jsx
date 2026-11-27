@@ -133,6 +133,37 @@ function JinjuScape() {
   )
 }
 
+// 남강유등축제처럼, 마우스가 강 위를 지나가면 유등을 띄운다. 물결 방향으로 흘러가다 사라지고, 한 번에 6개까지만
+function Lanterns() {
+  const box = useRef(null)
+  const [list, setList] = useState([])
+  useEffect(() => {
+    const hero = box.current?.parentElement
+    if (!hero || matchMedia('(prefers-reduced-motion: reduce)').matches) return
+    let id = 0
+    let last = { t: 0, x: -999 }
+    const timers = new Set()
+    const move = (e) => {
+      const scape = hero.querySelector('.auth-scape')
+      if (!scape || !scape.getClientRects().length) return
+      const s = scape.getBoundingClientRect()
+      const h = hero.getBoundingClientRect()
+      const k = Math.min(s.width / 800, s.height / 230) // 그림 배율 (viewBox 800×230, 아래 맞춤)
+      if (e.clientY < s.bottom - k * 80 || e.clientY > s.bottom) return
+      const now = performance.now()
+      if (now - last.t < 450 || Math.abs(e.clientX - last.x) < 50) return
+      last = { t: now, x: e.clientX }
+      const l = { id: ++id, x: e.clientX - h.left, y: s.bottom - h.top - k * (8 + Math.random() * 28) } // 물결(y 192~228) 위에만
+      setList((a) => [...a.slice(-5), l])
+      const t = setTimeout(() => { timers.delete(t); setList((a) => a.filter((v) => v.id !== l.id)) }, 11000)
+      timers.add(t)
+    }
+    hero.addEventListener('pointermove', move)
+    return () => { hero.removeEventListener('pointermove', move); timers.forEach(clearTimeout) }
+  }, [])
+  return <div ref={box} className="lanterns" aria-hidden="true">{list.map((l) => <span key={l.id} style={{ left: l.x, top: l.y }}><i /></span>)}</div>
+}
+
 // 로그인 화면 왼쪽: 월 마감 5단계를 차례로 보여 주고, 마우스를 올리거나 누르면 그 단계에 멈춘다
 function AuthSteps() {
   const [i, setI] = useState(0)
@@ -263,6 +294,7 @@ function Login({ onLogin }) {
         </div>
         <p className="auth-city">진주시청 · {CITY_HALL}</p>
         <JinjuScape />
+        <Lanterns />
       </aside>
       <div className="auth-form">
         <form onSubmit={submit}>
