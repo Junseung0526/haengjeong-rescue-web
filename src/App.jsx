@@ -464,6 +464,7 @@ function Palette({ items, onClose }) {
 function Shell({ user, logout, setUser }) {
   const [pw, setPw] = useState(false)
   const [acct, setAcct] = useState(false)
+  const [bye, setBye] = useState(false)
   const [pal, setPal] = useState(false)
   const [lock, setLock] = usePrivacy()
   // 직접 접거나 펼친 선택이 우선, 없으면 1280px 미만 화면에서 자동으로 접는다
@@ -566,7 +567,7 @@ function Shell({ user, logout, setUser }) {
             <ChevronRight size={15} className="user-go" aria-hidden="true" />
           </button>
           <button className="side-btn" onClick={() => setPw(true)} data-tip="비밀번호 변경"><KeyRound size={17} /><span>비밀번호 변경</span></button>
-          <button className="side-btn" onClick={logout} data-tip="로그아웃"><LogOut size={17} /><span>로그아웃</span></button>
+          <button className="side-btn" onClick={() => setBye(true)} data-tip="로그아웃"><LogOut size={17} /><span>로그아웃</span></button>
           <button className="side-btn" onClick={toggle} data-tip="메뉴 펼치기">{collapsed ? <PanelLeftOpen size={17} /> : <PanelLeftClose size={17} />}<span>메뉴 접기</span></button>
         </div>
       </aside>
@@ -600,6 +601,14 @@ function Shell({ user, logout, setUser }) {
       {pal && <Palette items={items} onClose={() => setPal(false)} />}
       {lock && <Privacy user={user} lock={lock} onBack={() => setLock(null)} />}
       {acct && <Account user={user} menus={items.length} onClose={() => setAcct(false)} />}
+      {bye && (
+        <Modal title="로그아웃할까요?" onClose={() => setBye(false)} footer={<>
+          <button className="btn" onClick={() => setBye(false)} autoFocus>취소</button>
+          <button className="btn danger" onClick={logout}><LogOut size={16} />로그아웃</button>
+        </>}>
+          <p className="muted" style={{ margin: 0 }}>저장하지 않은 입력은 사라집니다. 다시 쓰려면 아이디와 비밀번호로 로그인해야 합니다.</p>
+        </Modal>
+      )}
       {pw && <ChangePassword onDone={() => setUser({ ...user, must_change_password: false })} onClose={() => setPw(false)} />}
     </div>
   )
