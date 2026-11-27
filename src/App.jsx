@@ -4,12 +4,12 @@ import { BrowserRouter, Navigate, NavLink, Route, Routes, useLocation, useNaviga
 import {
   Bell, Building2, CircleHelp, CalendarCheck, CalendarClock, Calculator, CheckCircle2, ChevronDown, ChevronRight, Command, Eye, EyeOff,
   FileDown, FileSpreadsheet, GitCompare, KeyRound, LayoutDashboard, Loader2, LogOut, PanelLeftClose, PanelLeftOpen, ScanLine,
-  ScrollText, Search, Send, ShieldAlert, ShieldCheck, Trash2, TriangleAlert, Users as UsersIcon, UserCog, Wallet, XCircle,
+  ScrollText, RotateCw, Search, Send, ShieldAlert, ShieldCheck, Trash2, TriangleAlert, Users as UsersIcon, UserCog, Wallet, XCircle,
 } from 'lucide-react'
 import { api, getToken, setToken } from './api'
 import { Intro, Tour, tourSeen } from './agents'
 import { JinjuScape } from './scape'
-import { AppCtx, ErrorBox, Logo, FormModal, ROLE, projName, thisMonth, useApi, useApp, useDeptNames } from './ui'
+import { AppCtx, ErrorBox, Logo, FormModal, Modal, ROLE, RoleAvatar, projName, thisMonth, useApi, useApp, useDeptNames } from './ui'
 import Dashboard from './pages/Dashboard'
 import Participants from './pages/Participants'
 import Submissions from './pages/Submissions'
@@ -202,7 +202,7 @@ function Privacy({ user, lock, onBack }) {
       <div className="privacy-col">
         <time className="privacy-clock">{now.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit', hour12: false })}</time>
         <p className="privacy-date">{now.toLocaleDateString('ko-KR', { month: 'long', day: 'numeric', weekday: 'long' })}</p>
-        <div className="privacy-user"><span className="avatar">{user.name?.[0]}</span><div><b id="privacy-title">{user.name}</b><small>{ROLE[user.role]}</small></div></div>
+        <div className="privacy-user"><RoleAvatar role={user.role} size={21} /><div><b id="privacy-title">{user.name}</b><small>{ROLE[user.role]}</small></div></div>
         <span className="privacy-pill"><EyeOff size={14} />{lock.idle ? `${IDLE_MIN}분 동안 작업이 없어 화면을 가렸습니다` : '자리 비움'} · {mins < 1 ? '방금' : `${mins}분 전부터`}</span>
         <button className="btn primary privacy-back" onClick={onBack}>업무로 돌아가기</button>
         <p className="privacy-hint">개인정보 보호를 위해 내용을 가렸습니다. 돌아가면 보던 화면 그대로 이어집니다.</p>
@@ -291,6 +291,75 @@ function Login({ onLogin }) {
         <Footer />
       </div>
     </div>
+  )
+}
+
+// 새로고침 때 계정을 확인하는 동안의 첫 화면. index.html 의 같은 모양(.boot, 스타일도 거기)을 이어받고, 오래 걸리면 지금 하는 일을 바꿔 알린다
+const BOOT_MSG = [[0, '불러오는 중입니다'], [900, '계정을 확인하고 있습니다'], [2200, '담당 범위와 권한을 불러오고 있습니다'], [5000, '서버 응답이 늦습니다. 잠시만 기다려 주세요']]
+const BOOT_TIMEOUT = 15000
+// 서버가 잠깐 안 될 때 로그인을 풀어 버리지 않고, 다시 시도하거나 로그인 화면으로 갈지 고르게 한다
+function Boot({ error, onRetry, onLogin }) {
+  const [i, setI] = useState(0)
+  useEffect(() => {
+    if (error) return
+    const ts = BOOT_MSG.slice(1).map(([ms], k) => setTimeout(() => setI(k + 1), ms))
+    return () => ts.forEach(clearTimeout)
+  }, [error])
+  useEffect(() => {
+    if (!error) return
+    window.addEventListener('online', onRetry) // 인터넷이 다시 연결되면 저절로 다시 시도
+    return () => window.removeEventListener('online', onRetry)
+  }, [error, onRetry])
+  return (
+    <div className="boot shown" role={error ? 'alert' : 'status'} aria-live="polite">
+      <div className="boot-card">
+        <span className="boot-tile"><img src="/jinju-logo.png" alt="진주시" width="56" height="41" /></span>
+        <b>행정 구조대</b><small>진주시 통합 행정 시스템</small>
+        {error ? (
+          <div className="boot-err">
+            <p><TriangleAlert size={15} />서버에 연결하지 못했습니다</p>
+            <small>{navigator.onLine === false ? '인터넷 연결이 끊겨 있습니다. 연결되면 저절로 다시 시도합니다.' : '잠시 뒤 다시 시도해 주세요. 계속되면 시스템 관리자에게 문의하세요.'}</small>
+            <div className="boot-actions">
+              <button className="btn primary" onClick={onRetry} autoFocus><RotateCw size={15} />다시 시도</button>
+              <button className="btn ghost" onClick={onLogin}>로그인 화면으로</button>
+            </div>
+          </div>
+        ) : (
+          <>
+            <div className="boot-bar" aria-hidden="true"><i /></div>
+            <p className="boot-msg"><span key={i}>{BOOT_MSG[i][1]}</span></p>
+          </>
+        )}
+      </div>
+      <p className="boot-foot">진주시청 · 52789 경상남도 진주시 동진로 155</p>
+    </div>
+  )
+}
+
+// 사이드바 사용자 카드를 누르면 여는 내 계정 정보. 담당 범위는 코드 대신 사업·부서 이름으로 보여 준다
+function Account({ user, menus, onClose }) {
+  const names = useDeptNames()
+  const scopes = user.scopes ?? []
+  const scopeText = (sc) => `${sc.project_code ? projName(names, sc.project_code) : '전체 사업'} · ${sc.department_code ? names?.get(sc.department_code) ?? sc.department_code : '전체 부서'}`
+  const state = user.locked ? ['잠김', 'bad'] : user.is_active === false ? ['사용 중지', 'bad'] : ['사용 중', 'ok']
+  const rows = [
+    ['아이디', user.username],
+    ['역할', ROLE[user.role] ?? user.role],
+    ['담당 범위', scopes.length ? scopes.map((sc, k) => <span key={k} className="badge">{scopeText(sc)}</span>) : <span className="badge">전체 사업 · 전체 부서</span>],
+    user.pii_access !== undefined && ['개인정보 출력', user.pii_access ? '허용 · 주민번호 조회·출력 가능' : '없음'],
+    ['계정 상태', <span className={`acct-state ${state[1]}`}>{state[0]}</span>],
+    ['볼 수 있는 메뉴', `${menus}개`],
+  ].filter((r) => r && r[1] !== undefined && r[1] !== null)
+  // 화면 가리기·비밀번호 변경·로그아웃은 사이드바·상단에 이미 있어 여기선 정보만 보여 준다
+  return (
+    <Modal title="내 계정" onClose={onClose}>
+      <div className="acct-head">
+        <RoleAvatar role={user.role} size={24} />
+        <div><b>{user.name}</b><small>{ROLE[user.role] ?? user.role}</small></div>
+        <p className="city-tag">진주시 · 행정 구조대</p>
+      </div>
+      <dl className="acct">{rows.map(([k, v]) => <div key={k}><dt>{k}</dt><dd>{v}</dd></div>)}</dl>
+    </Modal>
   )
 }
 
@@ -394,6 +463,7 @@ function Palette({ items, onClose }) {
 
 function Shell({ user, logout, setUser }) {
   const [pw, setPw] = useState(false)
+  const [acct, setAcct] = useState(false)
   const [pal, setPal] = useState(false)
   const [lock, setLock] = usePrivacy()
   // 직접 접거나 펼친 선택이 우선, 없으면 1280px 미만 화면에서 자동으로 접는다
@@ -490,10 +560,11 @@ function Shell({ user, logout, setUser }) {
           })}
         </nav>
         <div className="sidebar-foot">
-          <div className="user-card" data-tip={user.name} data-tip-sub={ROLE[user.role]}>
-            <span className="avatar">{user.name?.[0]}</span>
+          <button type="button" className="user-card" onClick={() => setAcct(true)} data-tip={user.name} data-tip-sub={`${ROLE[user.role]} · 내 계정 보기`} aria-label={`${user.name} · 내 계정 보기`}>
+            <RoleAvatar role={user.role} size={16} />
             <div className="user-text"><b>{user.name}</b><small>{ROLE[user.role]}</small></div>
-          </div>
+            <ChevronRight size={15} className="user-go" aria-hidden="true" />
+          </button>
           <button className="side-btn" onClick={() => setPw(true)} data-tip="비밀번호 변경"><KeyRound size={17} /><span>비밀번호 변경</span></button>
           <button className="side-btn" onClick={logout} data-tip="로그아웃"><LogOut size={17} /><span>로그아웃</span></button>
           <button className="side-btn" onClick={toggle} data-tip="메뉴 펼치기">{collapsed ? <PanelLeftOpen size={17} /> : <PanelLeftClose size={17} />}<span>메뉴 접기</span></button>
@@ -528,6 +599,7 @@ function Shell({ user, logout, setUser }) {
       {collapsed && tip && <div className="nav-tip" style={{ left: tip.x, top: tip.y }} aria-hidden="true">{tip.text}{tip.sub && <small>{tip.sub}</small>}</div>}
       {pal && <Palette items={items} onClose={() => setPal(false)} />}
       {lock && <Privacy user={user} lock={lock} onBack={() => setLock(null)} />}
+      {acct && <Account user={user} menus={items.length} onClose={() => setAcct(false)} />}
       {pw && <ChangePassword onDone={() => setUser({ ...user, must_change_password: false })} onClose={() => setPw(false)} />}
     </div>
   )
@@ -548,12 +620,22 @@ export default function App() {
     setTimeout(() => setToasts((t) => t.filter((x) => x.id !== id)), 3500)
   }, [])
 
+  const [bootErr, setBootErr] = useState(null)
+  // 401·403만 로그인 만료로 보고, 서버·네트워크 오류나 응답 없음(15초)은 토큰을 지우지 않고 다시 시도를 묻는다
+  const checkMe = useCallback(() => {
+    setBootErr(null)
+    setBooting(true)
+    const late = new Promise((_, no) => setTimeout(() => no(new Error('timeout')), BOOT_TIMEOUT))
+    Promise.race([api.get('/api/auth/me'), late])
+      .then(setUser, (e) => { if (e?.status === 401 || e?.status === 403) setToken(null); else setBootErr(e) })
+      .finally(() => setBooting(false))
+  }, [])
   useEffect(() => {
-    if (getToken()) api.get('/api/auth/me').then(setUser, () => setToken(null)).finally(() => setBooting(false))
+    if (getToken()) checkMe()
     const expired = () => { setUser(null); toast('로그인이 만료되었습니다.', 'error') }
     window.addEventListener('auth:expired', expired)
     return () => window.removeEventListener('auth:expired', expired)
-  }, [toast])
+  }, [toast, checkMe])
 
   const logout = async () => {
     await api.post('/api/auth/logout').catch(() => {})
@@ -564,7 +646,7 @@ export default function App() {
   const ctx = useMemo(() => ({ user, scope, setScope, toast }), [user, scope, toast]) // eslint-disable-line react-hooks/exhaustive-deps
 
   let body
-  if (booting) body = <div className="empty" style={{ minHeight: '100vh' }}><Loader2 size={24} className="spin" />불러오는 중…</div>
+  if (booting || bootErr) body = <Boot key={bootErr ? 'err' : 'load'} error={bootErr} onRetry={checkMe} onLogin={() => { setToken(null); setBootErr(null) }} />
   else if (!user) body = <Login onLogin={setUser} />
   else if (user.must_change_password) body = <div className="auth" style={{ display: 'block' }}><ChangePassword forced onDone={() => setUser({ ...user, must_change_password: false })} onClose={logout} /></div>
   else body = <BrowserRouter><Shell user={user} logout={logout} setUser={setUser} /></BrowserRouter>

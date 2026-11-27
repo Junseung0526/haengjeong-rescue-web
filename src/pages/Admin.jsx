@@ -60,7 +60,7 @@ export function Users() {
       </PageHead>
       <Card>
         <Table {...users} rows={users.data} onRow={edit} columns={[
-          { key: 'name', label: '이름', render: (r) => <Person name={r.name} /> },
+          { key: 'name', label: '이름', render: (r) => <Person name={r.name} role={r.role} /> },
           { key: 'username', label: '아이디', render: (r) => <span className="mono">{r.username}</span> },
           { key: 'role', label: '역할', render: (r) => ROLE[r.role] },
           { key: 'scopes', label: '범위', render: (r) => showScopes(r.scopes, names) },

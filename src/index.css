@@ -813,3 +813,40 @@ th { box-shadow: 0 1px 0 var(--border); }
 .sidebar { background: radial-gradient(420px 320px at 0% 100%, rgba(20, 80, 163, .32), transparent 70%), radial-gradient(320px 240px at 100% 100%, rgba(243, 154, 30, .06), transparent 70%), #0f1c33; }
 .card.close { --close-glow: radial-gradient(760px 320px at 100% 0%, rgba(20, 80, 163, .5), transparent 62%), radial-gradient(520px 260px at 0% 100%, rgba(243, 154, 30, .09), transparent 62%); background-image: var(--close-glow); }
 .card.close:hover { background-image: radial-gradient(420px circle at var(--mx, 50%) var(--my, 50%), rgba(91, 155, 255, .16), transparent 45%), var(--close-glow); }
+
+/* 사이드바 사용자 카드 → 내 계정 */
+button.user-card { width: 100%; border: 0; background: none; font: inherit; text-align: left; cursor: pointer; transition: background .15s; }
+button.user-card:hover { background: rgba(255, 255, 255, .06); }
+button.user-card .user-text { flex: 1; min-width: 0; }
+.user-card .user-go { color: #6f84aa; transition: transform .2s var(--ease), color .2s; }
+button.user-card:hover .user-go { color: #fff; transform: translateX(2px); }
+.collapsed .user-card .user-go { display: none; }
+.acct-head { display: grid; grid-template-columns: auto 1fr; align-items: center; gap: 4px 14px; padding-bottom: 18px; margin-bottom: 6px; border-bottom: 1px solid var(--border); }
+.acct-head .avatar { grid-row: span 2; width: 52px; height: 52px; font-size: 20px; background: #e8eefb; color: #1450a3; }
+.acct-head b { display: block; font-size: 18px; }
+.acct-head small { display: block; color: var(--text-muted); font-size: 13.5px; margin-top: 2px; }
+.acct-head .city-tag { grid-column: 2; color: #6b7685; font-weight: 500; }
+.acct { margin: 0; }
+.acct > div { display: grid; grid-template-columns: 120px 1fr; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--border); font-size: 14.5px; }
+.acct > div:last-child { border-bottom: 0; }
+.acct dt { color: var(--text-muted); }
+.acct dd { margin: 0; display: flex; flex-wrap: wrap; gap: 6px; font-weight: 500; }
+.acct-state { display: inline-flex; align-items: center; gap: 6px; }
+.acct-state::before { content: ''; width: 7px; height: 7px; border-radius: 50%; background: #16a34a; }
+.acct-state.bad::before { background: #dc2626; }
+
+.modal:focus { outline: none; }
+/* 첫 화면 오류 */
+.boot-err { display: grid; justify-items: center; gap: 6px; margin-top: 24px; max-width: 320px; }
+.boot-err p { display: flex; align-items: center; gap: 6px; margin: 0; font-size: 14.5px; font-weight: 600; color: #b42318; }
+.boot-err > small { font-size: 13px; color: #6b7685; line-height: 1.55; }
+.boot-actions { display: flex; gap: 8px; margin-top: 14px; }
+
+/* 역할별 정해진 프로필 — 진주시 네 가지 색에서 가져온다 */
+.role-av { color: #fff; box-shadow: inset 0 0 0 1px rgba(255,255,255,.14); }
+.role-av.admin { background: #1450a3; }
+.role-av.payroll { background: #0f7b6c; }
+.role-av.head { background: #c2410c; }
+.role-av.staff { background: #4b7a2a; }
+.role-av.viewer { background: #5b6575; }
+.acct-head .role-av, .name .role-av { color: #fff; }

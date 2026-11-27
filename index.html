@@ -7,10 +7,29 @@
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="theme-color" content="#0a1b3d" />
     <meta name="description" content="진주시 사업 참여자 인건비 정산 행정 업무 시스템" />
+    <style>
+      /* 첫 화면(불러오는 중): 자바스크립트가 오기 전부터 index.html 이 그대로 보여 주고, React 도 같은 모양(.boot)을 이어 그려 깜빡임이 없다 */
+      .boot { position: fixed; inset: 0; display: grid; place-items: center; background: radial-gradient(1400px 820px at 50% -25%, #e9effa, transparent 70%), #f5f7fb; font-family: 'Pretendard Variable', Pretendard, -apple-system, 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif; color: #16213a; }
+      .boot-card { display: grid; justify-items: center; text-align: center; animation: boot-in .4s .15s cubic-bezier(.2, .8, .2, 1) both; }
+      .boot.shown .boot-card { animation: none; }
+      .boot-tile { width: 76px; height: 76px; margin-bottom: 18px; border-radius: 22px; background: #fff; display: grid; place-items: center; box-shadow: 0 12px 32px rgba(16, 41, 90, .12), 0 0 0 1px rgba(16, 41, 90, .06); }
+      .boot-tile img { width: 56px; height: auto; display: block; }
+      .boot-card b { font-size: 19px; font-weight: 700; letter-spacing: -0.02em; }
+      .boot-card small { margin-top: 3px; font-size: 13px; color: #6b7685; }
+      .boot-bar { position: relative; width: 168px; height: 3px; margin-top: 26px; border-radius: 3px; background: #e2e7ef; overflow: hidden; }
+      .boot-bar i { position: absolute; top: 0; bottom: 0; left: -45%; width: 45%; border-radius: 3px; background: linear-gradient(90deg, #1450a3 0 25%, #e8382c 25% 50%, #f39a1e 50% 75%, #4caf3c 75%); animation: boot-slide 1.4s cubic-bezier(.65, 0, .35, 1) infinite; }
+      .boot-msg { min-height: 1.5em; margin: 12px 0 0; font-size: 12.5px; color: #8a94a3; }
+      .boot-msg span { display: inline-block; animation: boot-msg .35s ease-out both; }
+      .boot-foot { position: absolute; left: 0; right: 0; bottom: 24px; margin: 0; text-align: center; font-size: 12px; color: #a1aab7; }
+      @keyframes boot-in { from { opacity: 0; transform: translateY(6px); } }
+      @keyframes boot-slide { to { left: 100%; } }
+      @keyframes boot-msg { from { opacity: 0; transform: translateY(3px); } }
+      @media (prefers-reduced-motion: reduce) { .boot-card, .boot-msg span { animation: none; } .boot-bar i { animation: none; left: 28%; } }
+    </style>
     <title>행정 구조대 · 진주시</title>
   </head>
   <body>
-    <div id="root"></div>
+    <div id="root"><div class="boot" role="status" aria-live="polite"><div class="boot-card"><span class="boot-tile"><img src="/jinju-logo.png" alt="진주시" width="56" height="41" /></span><b>행정 구조대</b><small>진주시 통합 행정 시스템</small><div class="boot-bar" aria-hidden="true"><i></i></div><p class="boot-msg"><span>불러오는 중입니다</span></p></div><p class="boot-foot">진주시청 · 52789 경상남도 진주시 동진로 155</p></div></div>
     <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>
