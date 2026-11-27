@@ -133,7 +133,7 @@ function JinjuScape() {
   )
 }
 
-// 남강유등축제처럼, 마우스가 강 위를 지나가면 유등을 띄운다. 물결 방향으로 흘러가다 사라지고, 한 번에 6개까지만
+// 남강유등축제처럼, 마우스가 강 위를 지나가면 유등을 띄운다. 물결 방향으로 흘러가다 사라지고, 한 번에 20개까지만
 function Lanterns() {
   const box = useRef(null)
   const [list, setList] = useState([])
@@ -151,17 +151,17 @@ function Lanterns() {
       const k = Math.min(s.width / 800, s.height / 230) // 그림 배율 (viewBox 800×230, 아래 맞춤)
       if (e.clientY < s.bottom - k * 80 || e.clientY > s.bottom) return
       const now = performance.now()
-      if (now - last.t < 450 || Math.abs(e.clientX - last.x) < 50) return
+      if (now - last.t < 140 || Math.abs(e.clientX - last.x) < 22) return
       last = { t: now, x: e.clientX }
-      const l = { id: ++id, x: e.clientX - h.left, y: s.bottom - h.top - k * (8 + Math.random() * 28) } // 물결(y 192~228) 위에만
-      setList((a) => [...a.slice(-5), l])
-      const t = setTimeout(() => { timers.delete(t); setList((a) => a.filter((v) => v.id !== l.id)) }, 11000)
+      const l = { id: ++id, x: e.clientX - h.left + (Math.random() - 0.5) * 16, y: s.bottom - h.top - k * (8 + Math.random() * 28), z: 0.75 + Math.random() * 0.45, t: 9 + Math.random() * 5 } // 물결(y 192~228) 위에만, 크기·속도는 조금씩 다르게
+      setList((a) => [...a.slice(-19), l])
+      const t = setTimeout(() => { timers.delete(t); setList((a) => a.filter((v) => v.id !== l.id)) }, 14500)
       timers.add(t)
     }
     hero.addEventListener('pointermove', move)
     return () => { hero.removeEventListener('pointermove', move); timers.forEach(clearTimeout) }
   }, [])
-  return <div ref={box} className="lanterns" aria-hidden="true">{list.map((l) => <span key={l.id} style={{ left: l.x, top: l.y }}><i /></span>)}</div>
+  return <div ref={box} className="lanterns" aria-hidden="true">{list.map((l) => <span key={l.id} style={{ left: l.x, top: l.y, '--z': l.z, animationDuration: `${l.t}s` }}><i /></span>)}</div>
 }
 
 // 로그인 화면 왼쪽: 월 마감 5단계를 차례로 보여 주고, 마우스를 올리거나 누르면 그 단계에 멈춘다
